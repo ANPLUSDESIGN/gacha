@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pixel Cube Gacha</title>
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;background:radial-gradient(circle at 50% 18%,#102750 0,#06101f 28%,#02050b 68%);overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{display:flex;align-items:center;justify-content:center;min-height:100svh}
+.stage{width:min(100vw,520px);height:100svh;display:flex;align-items:center;justify-content:center}
+.machine{position:relative;width:min(100%,calc(100svh * .5628));aspect-ratio:941/1672;filter:drop-shadow(0 24px 42px rgba(0,0,0,.55))}
+.machine-base{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+
+.grid{position:absolute;left:12.75%;top:7.75%;width:74.55%;height:48.10%;z-index:10;overflow:hidden}
+.unit{position:absolute;width:23.15%;height:23.15%;left:0;top:0;transform:translate3d(0,0,0);transition:transform .34s cubic-bezier(.18,.84,.24,1.05),filter .20s ease,opacity .20s ease;will-change:transform;transform-origin:center center}
+.unit.moving{z-index:30;filter:brightness(1.18) drop-shadow(0 0 11px rgba(71,201,255,.62))}
+.unit.selected{z-index:35;filter:brightness(1.30) drop-shadow(0 0 12px rgba(166,239,255,.95)) drop-shadow(0 0 24px rgba(41,170,255,.85))}
+.unit.dim{opacity:.27;filter:brightness(.52) saturate(.65)}
+.unit.gold{z-index:40;animation:goldPulse .52s ease-in-out infinite alternate}
+@keyframes goldPulse{from{filter:brightness(1.05) drop-shadow(0 0 8px rgba(255,210,74,.65))}to{filter:brightness(1.28) drop-shadow(0 0 16px rgba(255,236,153,.95)) drop-shadow(0 0 30px rgba(255,172,0,1))}}
+.unit-cube{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+.unit-capsule{position:absolute;left:18%;top:18%;width:64%;height:64%;object-fit:contain;pointer-events:none;user-select:none}
+.unit.sink{z-index:45;transition:transform .58s cubic-bezier(.24,.72,.24,1),opacity .40s ease .12s,filter .25s ease;opacity:0;filter:brightness(1.6)}
+
+.button-area{position:absolute;left:40.05%;top:54.15%;width:19.9%;aspect-ratio:1/1;z-index:55}
+.button-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+#buttonPressed{opacity:0}
+.action-button{position:absolute;inset:0;z-index:5;border:0;border-radius:50%;background:transparent;cursor:pointer}
+.button-area.pressed #buttonNormal{opacity:0}
+.button-area.pressed #buttonPressed{opacity:1;transform:translateY(2px) scale(.97)}
+
+.chute{position:absolute;left:35.25%;top:71.05%;width:29.5%;height:13.4%;z-index:60;overflow:hidden;pointer-events:none}
+.chute-glow{position:absolute;left:1%;top:0;width:98%;height:38%;object-fit:fill;opacity:0;pointer-events:none}
+.chute.active .chute-glow{animation:chuteGlow .85s ease}
+@keyframes chuteGlow{0%{opacity:0;transform:scale(.8)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
+.out-capsule{position:absolute;left:50%;top:-34%;width:46%;transform:translateX(-50%) rotate(-10deg) scale(.72);opacity:0;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.58))}
+.out-capsule.show{animation:outCapsule .95s cubic-bezier(.17,.84,.24,1.14) forwards}
+@keyframes outCapsule{0%{top:-34%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}18%{opacity:1}58%{top:50%;transform:translateX(-50%) rotate(8deg) scale(.92)}80%{top:68%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}100%{top:63%;opacity:1;transform:translateX(-50%) rotate(0) scale(.99)}}
+
+.flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:100}
+#whiteFlash{background:#fff}
+#goldFlash{background:radial-gradient(circle at 50% 45%,#fff 0 2%,#fff5b2 8%,rgba(255,189,0,.62) 25%,transparent 58%)}
+#whiteFlash.go{animation:whiteFlash .44s ease-out}
+#goldFlash.go{animation:goldFlash .86s ease-out}
+@keyframes whiteFlash{0%{opacity:0}20%{opacity:.84}100%{opacity:0}}
+@keyframes goldFlash{0%{opacity:0;transform:scale(.55)}28%{opacity:1}100%{opacity:0;transform:scale(1.42)}}
+
+.mode-panel{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px;z-index:120;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px)}
+.mode-panel button{border:0;border-radius:999px;padding:8px 14px;background:#172033;color:#fff;font-size:12px;font-weight:800}
+.mode-panel button.active{background:#087cff}
+
+.version{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:120;color:#84dcff;background:rgba(0,0,0,.5);border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap}
+</style>
+</head>
+
+<body>
+
+<div class="mode-panel" id="modePanel">
+  <button data-mode="normal">通常</button>
+  <button data-mode="random" class="active">ランダム</button>
+  <button data-mode="jackpot">確定</button>
+</div>
+
+<div class="stage">
+  <div class="machine">
+
+    <img class="machine-base" src="machine-base.png" alt="ガチャマシーン">
+
+    <div class="grid" id="grid"></div>
+
+    <div class="button-area" id="buttonArea">
+      <img id="buttonNormal" class="button-img" src="button.png" alt="">
+      <img id="buttonPressed" class="button-img" src="button-pressed.png" alt="">
+      <button id="actionButton" class="action-button" aria-label="ガチャを回す"></button>
+    </div>
+
+    <div class="chute" id="chute">
+      <img class="chute-glow" src="chute-glow.png" alt="">
+      <img id="outCapsule" class="out-capsule" src="capsule.png" alt="">
+    </div>
+
+  </div>
+</div>
+
+<div class="flash" id="whiteFlash"></div>
+<div class="flash" id="goldFlash"></div>
+
+<div class="version">FINAL TEST / キューブ本体移動</div>
+
+<script>
+(() => {
+
+  const grid = document.getElementById("grid");
+  const buttonArea = document.getElementById("buttonArea");
+  const actionButton = document.getElementById("actionButton");
+  const chute = document.getElementById("chute");
+  const outCapsule = document.getElementById("outCapsule");
+  const whiteFlash = document.getElementById("whiteFlash");
+  const goldFlash = document.getElementById("goldFlash");
+  const modePanel = document.getElementById("modePanel");
+
+  let units = [];
+  let busy = false;
+  let mode = "random";
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
+
+  function metrics(){
+    const gapX = grid.clientWidth * .022;
+    const gapY = grid.clientHeight * .022;
+    const width = (grid.clientWidth - gapX * 3) / 4;
+    const height = (grid.clientHeight - gapY * 3) / 4;
+    return {gapX,gapY,width,height};
+  }
+
+  function slotPosition(slot){
+    const m = metrics();
+
+    return {
+      x:(slot % 4) * (m.width + m.gapX),
+      y:Math.floor(slot / 4) * (m.height + m.gapY),
+      width:m.width,
+      height:m.height
+    };
+  }
+
+  function placeUnit(unit,slot,animate=true){
+    const p = slotPosition(slot);
+
+    if(!animate){
+      unit.style.transition = "none";
+    }
+
+    unit.style.width = p.width + "px";
+    unit.style.height = p.height + "px";
+
+    unit.style.transform =
+      `translate3d(${p.x}px,${p.y}px,0)`;
+
+    unit.dataset.slot = slot;
+
+    if(!animate){
+      unit.offsetHeight;
+      unit.style.transition = "";
+    }
+  }
+
+  function buildGrid(){
+    grid.innerHTML = "";
+    units = [];
+
+    for(let i=0;i<16;i++){
+
+      const unit = document.createElement("div");
+
+      unit.className = "unit";
+      unit.dataset.id = i;
+
+      unit.innerHTML = `
+        <img class="unit-cube" src="cube.png" alt="">
+        <img class="unit-capsule" src="capsule.png" alt="">
+      `;
+
+      grid.appendChild(unit);
+      units.push(unit);
+
+      placeUnit(unit,i,false);
+    }
+  }
+
+  function unitAt(slot){
+    return units.find(unit => Number(unit.dataset.slot) === slot);
+  }
+
+  function neighbours(slot){
+    const row = Math.floor(slot / 4);
+    const column = slot % 4;
+    const result = [];
+
+    if(row > 0) result.push(slot - 4);
+    if(row < 3) result.push(slot + 4);
+    if(column > 0) result.push(slot - 1);
+    if(column < 3) result.push(slot + 1);
+
+    return result;
+  }
+
+  async function swap(slotA,slotB){
+
+    const a = unitAt(slotA);
+    const b = unitAt(slotB);
+
+    if(!a || !b) return;
+
+    a.classList.add("moving");
+    b.classList.add("moving");
+
+    placeUnit(a,slotB,true);
+    placeUnit(b,slotA,true);
+
+    await sleep(360);
+
+    a.classList.remove("moving");
+    b.classList.remove("moving");
+  }
+
+  async function shuffle(){
+
+    let current = Math.floor(Math.random() * 16);
+
+    for(let i=0;i<12;i++){
+
+      const near = neighbours(current);
+
+      const next =
+        near[
+          Math.floor(
+            Math.random() *
+            near.length
+          )
+        ];
+
+      await swap(current,next);
+
+      current = next;
+    }
+  }
+
+  async function selectTarget(){
+
+    const target =
+      units[
+        Math.floor(
+          Math.random() *
+          units.length
+        )
+      ];
+
+    const decoys =
+      [...units]
+      .filter(unit => unit !== target)
+      .sort(() => Math.random() - .5)
+      .slice(0,2);
+
+    for(const unit of decoys){
+
+      unit.classList.add("selected");
+
+      await sleep(190);
+
+      unit.classList.remove("selected");
+
+      await sleep(70);
+    }
+
+    target.classList.add("selected");
+
+    await sleep(350);
+
+    return target;
+  }
+
+  async function routeToExit(target){
+
+    let slot =
+      Number(
+        target.dataset.slot
+      );
+
+    while(
+      Math.floor(
+        slot / 4
+      ) < 3
+    ){
+
+      const next =
+        slot + 4;
+
+      await swap(
+        slot,
+        next
+      );
+
+      slot =
+        next;
+    }
+
+    while(
+      (slot % 4) > 1
+    ){
+
+      const next =
+        slot - 1;
+
+      await swap(
+        slot,
+        next
+      );
+
+      slot =
+        next;
+    }
+
+    while(
+      (slot % 4) < 1
+    ){
+
+      const next =
+        slot + 1;
+
+      await swap(
+        slot,
+        next
+      );
+
+      slot =
+        next;
+    }
+
+    target.classList.add(
+      "selected"
+    );
+
+    await sleep(260);
+  }
+
+  function fireFlash(element){
+
+    element.classList.remove(
+      "go"
+    );
+
+    void element.offsetWidth;
+
+    element.classList.add(
+      "go"
+    );
+  }
+
+  async function jackpot(target){
+
+    units.forEach(unit => {
+
+      if(unit !== target){
+
+        unit.classList.add(
+          "dim"
+        );
+      }
+    });
+
+    target.classList.add(
+      "gold"
+    );
+
+    target
+      .querySelector(
+        ".unit-capsule"
+      )
+      .src =
+      "capsule-gold.png";
+
+    fireFlash(
+      goldFlash
+    );
+
+    await sleep(
+      700
+    );
+  }
+
+  async function sinkUnit(target){
+
+    const slot =
+      Number(
+        target.dataset.slot
+      );
+
+    const p =
+      slotPosition(slot);
+
+    target.classList.remove(
+      "selected"
+    );
+
+    target.classList.add(
+      "sink"
+    );
+
+    target.style.transform =
+      `translate3d(
+        ${p.x}px,
+        ${p.y + p.height * .95}px,
+        0
+      )
+      scale(.58)`;
+
+    await sleep(
+      600
+    );
+  }
+
+  async function releaseCapsule(gold){
+
+    outCapsule.src =
+      gold
+      ?
+      "capsule-gold.png"
+      :
+      "capsule.png";
+
+    chute.classList.remove(
+      "active"
+    );
+
+    outCapsule.classList.remove(
+      "show"
+    );
+
+    void outCapsule.offsetWidth;
+
+    chute.classList.add(
+      "active"
+    );
+
+    outCapsule.classList.add(
+      "show"
+    );
+
+    if(navigator.vibrate){
+
+      navigator.vibrate(
+        [18,35,22]
+      );
+    }
+
+    await sleep(
+      1000
+    );
+  }
+
+  async function run(){
+
+    if(busy){
+      return;
+    }
+
+    busy = true;
+
+    actionButton.disabled =
+      true;
+
+    buildGrid();
+
+    outCapsule.classList.remove(
+      "show"
+    );
+
+    chute.classList.remove(
+      "active"
+    );
+
+    await sleep(100);
+
+    await shuffle();
+
+    const target =
+      await selectTarget();
+
+    const isGold =
+      mode === "jackpot"
+      ||
+      (
+        mode === "random"
+        &&
+        Math.random() < .08
+      );
+
+    await routeToExit(
+      target
+    );
+
+    if(isGold){
+
+      await jackpot(
+        target
+      );
+    }
+
+    await sleep(180);
+
+    await sinkUnit(
+      target
+    );
+
+    await sleep(180);
+
+    await releaseCapsule(
+      isGold
+    );
+
+    fireFlash(
+      isGold
+      ?
+      goldFlash
+      :
+      whiteFlash
+    );
+
+    busy = false;
+
+    actionButton.disabled =
+      false;
+  }
+
+  actionButton.addEventListener(
+    "pointerdown",
+    () => {
+
+      if(busy){
+        return;
+      }
+
+      buttonArea.classList.add(
+        "pressed"
+      );
+
+      if(navigator.vibrate){
+
+        navigator.vibrate(
+          14
+        );
+      }
+    }
+  );
+
+  [
+    "pointerup",
+    "pointercancel",
+    "pointerleave"
+  ]
+  .forEach(eventName => {
+
+    actionButton.addEventListener(
+      eventName,
+      () => {
+
+        buttonArea.classList.remove(
+          "pressed"
+        );
+      }
+    );
+  });
+
+  actionButton.addEventListener(
+    "click",
+    run
+  );
+
+  modePanel.addEventListener(
+    "click",
+    event => {
+
+      const button =
+        event.target.closest(
+          "button"
+        );
+
+      if(!button){
+        return;
+      }
+
+      mode =
+        button.dataset.mode;
+
+      modePanel
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(item => {
+
+        item.classList.remove(
+          "active"
+        );
+      });
+
+      button.classList.add(
+        "active"
+      );
+    }
+  );
+
+  window.addEventListener(
+    "resize",
+    () => {
+
+      if(!busy){
+
+        buildGrid();
+      }
+    }
+  );
+
+  buildGrid();
+
+})();
+</script>
+
+</body>
+</html>
