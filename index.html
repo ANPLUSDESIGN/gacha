@@ -168,7 +168,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 </div>
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
-<div class="version">V12 / SOUND</div>
+<div class="version">V13 / CINEMATIC SOUND</div>
 <script>
 (() => {
   const grid = document.getElementById("grid");
@@ -192,11 +192,16 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 
 
   /* ==============================
-     SOUND（外部音源不要）
+     SOUND V13
+     ファミコン系ではなく、重めのSF・機械音
+     外部MP3不要
   ============================== */
 
   let audioCtx = null;
   let masterGain = null;
+  let dryGain = null;
+  let roomGain = null;
+  let convolver = null;
 
   function initAudio(){
     if(!audioCtx){
@@ -204,9 +209,45 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
       if(!AC) return;
 
       audioCtx = new AC();
+
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.20;
-      masterGain.connect(audioCtx.destination);
+      masterGain.gain.value = 0.52;
+
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.value = -20;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 5;
+      compressor.attack.value = .003;
+      compressor.release.value = .22;
+
+      dryGain = audioCtx.createGain();
+      dryGain.gain.value = 1.0;
+
+      roomGain = audioCtx.createGain();
+      roomGain.gain.value = .20;
+
+      convolver = audioCtx.createConvolver();
+
+      /* 短い部屋鳴りをその場で生成 */
+      const seconds = .42;
+      const length = Math.floor(audioCtx.sampleRate * seconds);
+      const impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+
+      for(let ch=0; ch<2; ch++){
+        const data = impulse.getChannelData(ch);
+        for(let i=0; i<length; i++){
+          const decay = Math.pow(1 - i/length, 3.2);
+          data[i] = (Math.random()*2-1) * decay;
+        }
+      }
+
+      convolver.buffer = impulse;
+
+      dryGain.connect(masterGain);
+      convolver.connect(roomGain);
+      roomGain.connect(masterGain);
+      masterGain.connect(compressor);
+      compressor.connect(audioCtx.destination);
     }
 
     if(audioCtx.state === "suspended"){
@@ -214,15 +255,38 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     }
   }
 
-  function tone(freq=440,duration=.1,type="sine",volume=.12,delay=0,endFreq=null){
-    if(!audioCtx || !masterGain) return;
+
+  function connectSound(node, room=.12){
+    if(!audioCtx || !dryGain) return;
+
+    node.connect(dryGain);
+
+    if(convolver && room > 0){
+      const send = audioCtx.createGain();
+      send.gain.value = room;
+      node.connect(send);
+      send.connect(convolver);
+    }
+  }
+
+
+  function tone(
+    freq=440,
+    duration=.1,
+    type="sine",
+    volume=.12,
+    delay=0,
+    endFreq=null,
+    room=.10
+  ){
+    if(!audioCtx) return;
 
     const t = audioCtx.currentTime + delay;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
     osc.type = type;
-    osc.frequency.setValueAtTime(freq,t);
+    osc.frequency.setValueAtTime(freq, t);
 
     if(endFreq){
       osc.frequency.exponentialRampToValueAtTime(
@@ -232,18 +296,28 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     }
 
     gain.gain.setValueAtTime(.0001,t);
-    gain.gain.exponentialRampToValueAtTime(volume,t+.012);
+    gain.gain.exponentialRampToValueAtTime(volume,t+.018);
     gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
 
     osc.connect(gain);
-    gain.connect(masterGain);
+    connectSound(gain, room);
 
     osc.start(t);
-    osc.stop(t+duration+.03);
+    osc.stop(t+duration+.04);
   }
 
-  function noise(duration=.1,volume=.08,delay=0){
-    if(!audioCtx || !masterGain) return;
+
+  function noiseSweep(
+    duration=.15,
+    volume=.10,
+    delay=0,
+    startFreq=500,
+    endFreq=2200,
+    filterType="bandpass",
+    q=.8,
+    room=.08
+  ){
+    if(!audioCtx) return;
 
     const len = Math.max(1,Math.floor(audioCtx.sampleRate*duration));
     const buffer = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
@@ -259,76 +333,138 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     const t = audioCtx.currentTime + delay;
 
     src.buffer = buffer;
-    filter.type = "bandpass";
-    filter.frequency.value = 1200;
-    filter.Q.value = .75;
 
-    gain.gain.setValueAtTime(volume,t);
+    filter.type = filterType;
+    filter.Q.value = q;
+    filter.frequency.setValueAtTime(startFreq,t);
+    filter.frequency.exponentialRampToValueAtTime(
+      Math.max(40,endFreq),
+      t + duration
+    );
+
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(volume,t+.015);
     gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
 
     src.connect(filter);
     filter.connect(gain);
-    gain.connect(masterGain);
+    connectSound(gain, room);
 
     src.start(t);
   }
 
+
+  function metallicTick(delay=0, volume=.10){
+    tone(1850,.065,"sine",volume,delay,1100,.16);
+    tone(2700,.045,"sine",volume*.42,delay+.012,1600,.12);
+  }
+
+
+  function bassImpact(delay=0, volume=.18){
+    tone(105,.22,"sine",volume,delay,44,.04);
+    tone(58,.28,"sine",volume*.65,delay+.015,36,.02);
+    noiseSweep(.10,volume*.36,delay,150,650,"lowpass",.5,.03);
+  }
+
+
+  /* 押下：金属クリック＋低い重み */
   function soundButton(){
-    tone(130,.055,"square",.16);
-    tone(72,.085,"sine",.14,.01,50);
+    metallicTick(0,.13);
+    bassImpact(.008,.15);
   }
 
+
+  /* キューブ：ガラス塊が滑る音 */
   function soundCubeMove(){
-    tone(210,.13,"triangle",.075,0,315);
-    noise(.075,.032,.02);
+    noiseSweep(.22,.11,0,420,1900,"bandpass",.65,.13);
+    tone(155,.22,"sine",.075,0,210,.06);
+    metallicTick(.15,.065);
   }
 
+
+  /* 選択：透明感のあるガラスチャイム */
   function soundSelect(){
-    tone(720,.075,"sine",.09);
-    tone(980,.085,"sine",.055,.055);
+    metallicTick(0,.12);
+    tone(880,.22,"sine",.08,.02,760,.24);
+    tone(1320,.28,"sine",.055,.055,1060,.26);
   }
 
+
+  /* 大当たり予告：低音＋上昇するSFスイープ */
   function soundJackpot(){
-    tone(392,.16,"triangle",.12,0);
-    tone(523.25,.18,"triangle",.13,.12);
-    tone(659.25,.21,"triangle",.14,.25);
-    tone(783.99,.30,"sine",.12,.39);
+    bassImpact(0,.24);
+    noiseSweep(.70,.16,.02,260,5200,"bandpass",.55,.20);
+
+    tone(110,.72,"sine",.10,0,165,.15);
+    tone(220,.62,"sine",.07,.10,330,.20);
+    tone(440,.48,"triangle",.06,.28,660,.24);
+
+    metallicTick(.50,.11);
+    metallicTick(.62,.09);
   }
 
+
+  /* キューブ収納：下へ吸い込まれる重い音 */
   function soundSink(){
-    tone(320,.32,"sawtooth",.055,0,72);
-    noise(.17,.035,.05);
+    noiseSweep(.42,.12,0,2500,260,"bandpass",.75,.10);
+    tone(260,.42,"sawtooth",.065,0,62,.07);
+    bassImpact(.22,.14);
   }
 
+
+  /* 排出：メカのロック解除→ドン */
   function soundChute(){
-    tone(82,.10,"square",.14);
-    noise(.12,.09,.02);
-    tone(128,.16,"triangle",.08,.09,88);
+    metallicTick(0,.12);
+    metallicTick(.055,.085);
+    noiseSweep(.20,.105,.07,900,260,"lowpass",.7,.06);
+    bassImpact(.12,.20);
   }
 
+
+  /* 開封チャージ：大きく吸い込むような上昇音 */
   function soundOpenCharge(isJackpot){
     if(isJackpot){
-      tone(420,.42,"sine",.09,0,980);
-      tone(630,.42,"triangle",.06,.04,1420);
+      noiseSweep(.74,.18,0,230,6800,"bandpass",.55,.23);
+      tone(125,.72,"sine",.11,0,310,.15);
+      tone(250,.65,"triangle",.075,.08,720,.20);
+      tone(500,.52,"sine",.055,.18,1500,.25);
     }else{
-      tone(330,.38,"sine",.07,0,820);
-      tone(560,.34,"triangle",.05,.04,1080);
+      noiseSweep(.60,.14,0,260,4500,"bandpass",.62,.18);
+      tone(150,.56,"sine",.09,0,320,.12);
+      tone(360,.46,"triangle",.055,.08,820,.18);
     }
   }
 
+
+  /* 通常：画面全面白フラッシュと同時に強い破裂音 */
   function soundWhiteFlash(){
-    noise(.34,.15);
-    tone(1150,.22,"sine",.105,0,440);
-    tone(210,.26,"sine",.10,.015,95);
+    bassImpact(0,.27);
+    noiseSweep(.46,.24,0,6500,420,"lowpass",.4,.17);
+    noiseSweep(.28,.15,.015,450,5200,"bandpass",.45,.22);
+
+    tone(920,.32,"sine",.075,.015,460,.22);
+    tone(1800,.22,"sine",.045,.025,900,.24);
   }
 
+
+  /* 大当たり：さらに重く、金属・低音・広がり */
   function soundGoldFlash(){
-    noise(.45,.17);
-    tone(523.25,.48,"triangle",.13,0);
-    tone(659.25,.48,"triangle",.12,.035);
-    tone(783.99,.54,"sine",.12,.07);
-    tone(1046.50,.62,"sine",.105,.12);
+    bassImpact(0,.34);
+    bassImpact(.09,.22);
+
+    noiseSweep(.60,.28,0,7600,360,"lowpass",.38,.24);
+    noiseSweep(.46,.18,.02,380,7200,"bandpass",.45,.28);
+
+    tone(130,.75,"sine",.13,0,82,.18);
+    tone(261.63,.62,"triangle",.10,.03,196,.24);
+    tone(392,.62,"sine",.085,.08,294,.30);
+    tone(523.25,.70,"sine",.075,.13,392,.32);
+
+    metallicTick(.16,.13);
+    metallicTick(.25,.10);
+    metallicTick(.34,.085);
   }
+
 
 
   function metrics(){
