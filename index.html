@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pixel Cube Gacha FINAL</title>
+<title>Pixel Cube Gacha FINAL V10</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{
@@ -28,16 +28,16 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 .grid{
   position:absolute;
   left:12.95%;
-  top:8.2%;
-  width:74.1%;
-  height:47.3%;
+  top:8.05%;
+  width:74.15%;
+  height:47.35%;
   z-index:10;
-  overflow:hidden;
+  overflow:visible;
 }
 .unit{
   position:absolute;left:0;top:0;
   transition:
-    transform .54s cubic-bezier(.16,.84,.24,1.04),
+    transform .56s cubic-bezier(.16,.84,.24,1.04),
     filter .24s ease,
     opacity .22s ease;
   will-change:transform;
@@ -45,98 +45,56 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 }
 .unit.moving{
   z-index:30;
-  filter:
-    brightness(1.16)
-    drop-shadow(0 0 10px rgba(68,201,255,.58))
-    drop-shadow(0 8px 14px rgba(0,0,0,.22));
+  filter:brightness(1.14) drop-shadow(0 0 12px rgba(68,201,255,.55));
 }
 .unit.selected{
   z-index:36;
-  filter:
-    brightness(1.28)
-    drop-shadow(0 0 10px rgba(180,244,255,.92))
-    drop-shadow(0 0 20px rgba(33,169,255,.8));
+  filter:brightness(1.28) drop-shadow(0 0 10px rgba(180,244,255,.92)) drop-shadow(0 0 20px rgba(33,169,255,.8));
 }
-.unit.dim{
-  opacity:.24;
-  filter:brightness(.52) saturate(.58);
-}
-.unit.gold-unit{
-  filter:drop-shadow(0 0 10px rgba(255,205,70,.42));
-}
-.unit.jackpot{
-  z-index:42;
-  animation:goldPulse .48s ease-in-out infinite alternate;
-}
+.unit.dim{opacity:.24;filter:brightness(.52) saturate(.58)}
+.unit.gold-unit{filter:drop-shadow(0 0 10px rgba(255,205,70,.42))}
+.unit.jackpot{z-index:42;animation:goldPulse .48s ease-in-out infinite alternate}
 @keyframes goldPulse{
   from{filter:brightness(1.05) drop-shadow(0 0 10px rgba(255,205,70,.55))}
   to{filter:brightness(1.3) drop-shadow(0 0 18px rgba(255,236,150,.95)) drop-shadow(0 0 34px rgba(255,172,0,.95))}
 }
 .unit-cube{
-  position:absolute;inset:0;width:100%;height:100%;
+  position:absolute;
+  left:-4.5%;top:-4.5%;width:109%;height:109%;
   object-fit:contain;pointer-events:none;user-select:none;
 }
 .unit-capsule{
-  position:absolute;left:18%;top:18%;width:64%;height:64%;
+  position:absolute;left:21%;top:20.5%;width:58%;height:58%;
   object-fit:contain;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.18));
 }
 .unit.sink{
   z-index:48;
-  transition:
-    transform .66s cubic-bezier(.22,.72,.24,1),
-    opacity .46s ease .12s,
-    filter .25s ease;
-  opacity:0;
-  filter:brightness(1.55);
+  transition:transform .66s cubic-bezier(.22,.72,.24,1), opacity .46s ease .12s, filter .25s ease;
+  opacity:0;filter:brightness(1.55);
 }
 
 /* ===== ボタン ===== */
-.button-area{
-  position:absolute;left:40.05%;top:54.15%;
-  width:19.9%;aspect-ratio:1/1;z-index:55;
-}
-.button-img{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:contain;pointer-events:none;
-}
+.button-area{position:absolute;left:40.05%;top:54.15%;width:19.9%;aspect-ratio:1/1;z-index:55}
+.button-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
 #buttonPressed{opacity:0}
-.action-button{
-  position:absolute;inset:0;z-index:5;border:0;
-  border-radius:50%;background:transparent;cursor:pointer;
-}
+.action-button{position:absolute;inset:0;z-index:5;border:0;border-radius:50%;background:transparent;cursor:pointer}
 .button-area.pressed #buttonNormal{opacity:0}
-.button-area.pressed #buttonPressed{
-  opacity:1;
-  transform:translateY(2px) scale(.97);
-}
+.button-area.pressed #buttonPressed{opacity:1;transform:translateY(2px) scale(.97)}
 
 /* ===== 排出口 ===== */
-.chute{
-  position:absolute;
-  left:35.25%;top:71.05%;
-  width:29.5%;height:13.4%;
-  z-index:60;overflow:hidden;pointer-events:none;
-}
-.chute-glow{
-  position:absolute;left:1%;top:0;width:98%;height:38%;
-  object-fit:fill;opacity:0;
-}
-.chute.active .chute-glow{animation:chuteGlow .82s ease}
-@keyframes chuteGlow{
-  0%{opacity:0;transform:scale(.82)}
-  25%{opacity:1;transform:scale(1)}
-  100%{opacity:0;transform:scale(1.12)}
-}
+.chute{position:absolute;left:35.25%;top:71.05%;width:29.5%;height:13.4%;z-index:60;overflow:hidden;pointer-events:none}
+.chute-glow{position:absolute;left:-2%;top:-3%;width:104%;height:54%;object-fit:fill;opacity:0}
+.chute.active .chute-glow{animation:chuteGlow .9s ease}
+@keyframes chuteGlow{0%{opacity:0;transform:scale(.82)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
 .out-capsule{
-  position:absolute;left:50%;top:-34%;
-  width:46%;
+  position:absolute;left:50%;top:-38%;width:46%;
   transform:translateX(-50%) rotate(-10deg) scale(.72);
-  opacity:0;
-  filter:drop-shadow(0 8px 10px rgba(0,0,0,.58));
+  opacity:0;filter:drop-shadow(0 8px 10px rgba(0,0,0,.58));
 }
 .out-capsule.show{animation:outCapsule 1.02s cubic-bezier(.17,.84,.24,1.14) forwards}
 @keyframes outCapsule{
-  0%{top:-34%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}
+  0%{top:-38%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}
   18%{opacity:1}
   55%{top:52%;transform:translateX(-50%) rotate(8deg) scale(.93)}
   78%{top:69%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}
@@ -144,74 +102,40 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 }
 
 /* ===== カプセルOPEN ===== */
-.open-layer{
-  position:fixed;inset:0;
-  z-index:85;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(1,4,12,.64);
-  backdrop-filter:blur(5px);
-  opacity:0;pointer-events:none;
-}
+.open-layer{position:fixed;inset:0;z-index:85;display:flex;align-items:center;justify-content:center;background:rgba(1,4,12,.72);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .18s ease}
 .open-layer.show{opacity:1}
-.open-stage{
-  position:relative;
-  width:min(58vw,280px);
-  aspect-ratio:1/1;
-}
-.open-half{
-  position:absolute;
-  inset:0;
-  width:100%;height:100%;
-  object-fit:contain;
-  filter:drop-shadow(0 0 20px rgba(70,190,255,.48));
-}
+.open-stage{position:relative;width:min(60vw,300px);aspect-ratio:1/1}
+.open-half{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 22px rgba(70,190,255,.55))}
 .open-half.top{clip-path:inset(0 0 50% 0)}
 .open-half.bottom{clip-path:inset(50% 0 0 0)}
 .open-layer.opening .open-half.top{animation:openTop .62s cubic-bezier(.18,.84,.25,1) forwards}
 .open-layer.opening .open-half.bottom{animation:openBottom .62s cubic-bezier(.18,.84,.25,1) forwards}
-.open-layer.gold .open-half{filter:drop-shadow(0 0 24px rgba(255,210,70,.58))}
-@keyframes openTop{to{transform:translateY(-40%) rotate(-12deg) scale(1.01)}}
-@keyframes openBottom{to{transform:translateY(40%) rotate(12deg) scale(1.01)}}
-.open-beam{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.3);
-  width:34%;height:34%;border-radius:50%;opacity:0;
-  background:radial-gradient(circle,#ffffff 0 18%,rgba(255,255,255,.92) 35%,rgba(120,220,255,.36) 68%,transparent 78%);
-  filter:blur(8px);
+.open-layer.gold .open-half{filter:drop-shadow(0 0 28px rgba(255,210,70,.72))}
+@keyframes openTop{to{transform:translateY(-42%) rotate(-12deg) scale(1.02)}}
+@keyframes openBottom{to{transform:translateY(42%) rotate(12deg) scale(1.02)}}
+.open-burst{
+  position:absolute;inset:-45%;
+  background:radial-gradient(circle,#ffffff 0 8%,rgba(255,255,255,.98) 18%,rgba(170,233,255,.72) 34%,rgba(111,189,255,.22) 52%,transparent 68%);
+  border-radius:50%;opacity:0;transform:scale(.2);
 }
-.open-layer.opening .open-beam{animation:beamPop .46s .24s ease-out forwards}
-.open-layer.gold .open-beam{background:radial-gradient(circle,#fffbd9 0 18%,rgba(255,248,183,.98) 35%,rgba(255,210,60,.44) 68%,transparent 78%)}
-@keyframes beamPop{to{opacity:1;transform:translate(-50%,-50%) scale(1.22)}}
+.open-layer.opening .open-burst{animation:burstPop .42s .18s ease-out forwards}
+.open-layer.gold .open-burst{background:radial-gradient(circle,#fffef0 0 8%,rgba(255,250,203,.98) 18%,rgba(255,220,110,.78) 34%,rgba(255,177,0,.28) 52%,transparent 68%)}
+@keyframes burstPop{to{opacity:1;transform:scale(1.22)}}
 
 /* ===== 最終フラッシュ ===== */
 .flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:100}
-#whiteFlash{background:#fff}
-#goldFlash{background:radial-gradient(circle at 50% 48%,#fff 0 4%,#fff5b2 12%,rgba(255,190,0,.8) 34%,rgba(255,149,0,.2) 58%,transparent 72%)}
-#whiteFlash.go{animation:whiteFlash .62s ease-out}
-#goldFlash.go{animation:goldFlash .96s ease-out}
-@keyframes whiteFlash{0%{opacity:0}25%{opacity:1}55%{opacity:.68}100%{opacity:0}}
-@keyframes goldFlash{0%{opacity:0;transform:scale(.55)}28%{opacity:1}58%{opacity:.8}100%{opacity:0;transform:scale(1.45)}}
+#whiteFlash{background:#ffffff}
+#goldFlash{background:linear-gradient(180deg,rgba(255,253,230,1) 0%,rgba(255,240,176,1) 30%,rgba(255,207,74,1) 65%,rgba(255,173,24,1) 100%)}
+#whiteFlash.go{animation:whiteFlash .9s ease-out}
+#goldFlash.go{animation:goldFlash 1.05s ease-out}
+@keyframes whiteFlash{0%{opacity:0}18%{opacity:1}62%{opacity:1}100%{opacity:0}}
+@keyframes goldFlash{0%{opacity:0}18%{opacity:1}64%{opacity:1}100%{opacity:0}}
 
-/* ===== テスト用 ===== */
-.mode-panel{
-  position:fixed;
-  top:max(10px,env(safe-area-inset-top));
-  left:50%;transform:translateX(-50%);
-  display:flex;gap:6px;padding:6px;
-  z-index:120;border-radius:999px;
-  background:rgba(0,0,0,.66);
-  border:1px solid rgba(255,255,255,.13);
-  backdrop-filter:blur(8px);
-}
-.mode-panel button{
-  border:0;border-radius:999px;padding:8px 14px;
-  background:#172033;color:#fff;font-size:12px;font-weight:800;
-}
+/* ===== テストUI ===== */
+.mode-panel{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px;z-index:120;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px)}
+.mode-panel button{border:0;border-radius:999px;padding:8px 14px;background:#172033;color:#fff;font-size:12px;font-weight:800}
 .mode-panel button.active{background:#087cff}
-.version{
-  position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
-  z-index:120;color:#84dcff;background:rgba(0,0,0,.5);
-  border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap;
-}
+.version{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:120;color:#84dcff;background:rgba(0,0,0,.5);border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -239,12 +163,12 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   <div class="open-stage">
     <img id="openTop" class="open-half top" src="capsule.png" alt="">
     <img id="openBottom" class="open-half bottom" src="capsule.png" alt="">
-    <div class="open-beam"></div>
+    <div class="open-burst"></div>
   </div>
 </div>
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
-<div class="version">V9 / 隙間調整・OPEN改善</div>
+<div class="version">V10 / 配置補正・全画面フラッシュ</div>
 <script>
 (() => {
   const grid = document.getElementById("grid");
@@ -267,18 +191,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   function metrics(){
-    const gapX = grid.clientWidth * .009;
-    const gapY = grid.clientHeight * .009;
-    const width = (grid.clientWidth - gapX * 3) / 4;
-    const height = (grid.clientHeight - gapY * 3) / 4;
+    const gapX = 0;
+    const gapY = 0;
+    const width = grid.clientWidth / 4;
+    const height = grid.clientHeight / 4;
     return {gapX, gapY, width, height};
   }
 
   function slotPosition(slot){
     const m = metrics();
     return {
-      x:(slot % 4) * (m.width + m.gapX),
-      y:Math.floor(slot / 4) * (m.height + m.gapY),
+      x:(slot % 4) * m.width,
+      y:Math.floor(slot / 4) * m.height,
       width:m.width,
       height:m.height
     };
@@ -336,12 +260,12 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     const destinations = uniqueSlots.slice(1);
     destinations.push(uniqueSlots[0]);
     group.forEach((unit,index) => placeUnit(unit, destinations[index], true));
-    await sleep(560);
+    await sleep(570);
     group.forEach(unit => unit.classList.remove("moving"));
   }
 
   function makeConnectedGroup(){
-    const count = Math.random() < .58 ? 2 : 3;
+    const count = Math.random() < .52 ? 2 : 3;
     const first = Math.floor(Math.random() * 16);
     const slots = [first];
     let current = first;
@@ -358,7 +282,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   async function shuffle(){
     for(let i=0;i<8;i++){
       await moveGroup(makeConnectedGroup());
-      await sleep(65);
+      await sleep(70);
     }
   }
 
@@ -467,7 +391,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(140);
     await openCapsule(isJackpot);
     if(isJackpot){ fireFlash(goldFlash); } else { fireFlash(whiteFlash); }
-    await sleep(isJackpot ? 920 : 650);
+    await sleep(isJackpot ? 1050 : 900);
     openLayer.className = "open-layer";
     busy = false;
     actionButton.disabled = false;
