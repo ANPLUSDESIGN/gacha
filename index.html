@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pixel Cube Gacha</title>
+<style>
+:root{
+  --cyan:#26c8ff;
+  --blue:#1177ff;
+  --gold:#ffd84a;
+  --bg:#02050b;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  min-height:100%;
+  background:
+    radial-gradient(circle at 50% 10%,#10294d 0,#07101d 24%,#02050b 62%);
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+body{
+  min-height:100svh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+.stage{
+  position:relative;
+  width:min(100vw,500px);
+  height:100svh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.machine{
+  position:relative;
+  width:min(100%,calc(100svh * .5));
+  aspect-ratio:1/2;
+  filter:drop-shadow(0 24px 42px rgba(0,0,0,.5));
+}
+.machine img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* 画像上部の4×4キューブに合わせた透明タップ/発光レイヤー */
+.grid{
+  position:absolute;
+  left:11.6%;
+  top:10.3%;
+  width:77.0%;
+  height:42.8%;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:.9%;
+  pointer-events:none;
+}
+.cell{
+  position:relative;
+  border-radius:6%;
+  opacity:0;
+  transition:.12s ease;
+}
+.cell.scan{
+  opacity:1;
+  background:rgba(35,194,255,.08);
+  box-shadow:
+    inset 0 0 0 2px rgba(75,222,255,.75),
+    inset 0 0 20px rgba(0,152,255,.25),
+    0 0 20px rgba(0,157,255,.65);
+  animation:pulse .22s ease-in-out infinite alternate;
+}
+.cell.hit{
+  opacity:1;
+  background:rgba(41,183,255,.14);
+  box-shadow:
+    inset 0 0 0 3px #94efff,
+    inset 0 0 26px rgba(42,193,255,.45),
+    0 0 34px rgba(35,177,255,.95);
+}
+.cell.gold{
+  opacity:1;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.55),rgba(255,214,60,.24) 32%,transparent 64%);
+  box-shadow:
+    inset 0 0 0 3px #fff1a0,
+    inset 0 0 30px rgba(255,205,30,.65),
+    0 0 44px rgba(255,181,0,1);
+  animation:goldPulse .16s ease-in-out infinite alternate;
+}
+@keyframes pulse{from{filter:brightness(.9)}to{filter:brightness(1.65)}}
+@keyframes goldPulse{from{filter:brightness(1)}to{filter:brightness(1.9)}}
+
+/* 実機の中央ボタン位置に重ねる */
+.start{
+  position:absolute;
+  left:50%;
+  top:61.3%;
+  transform:translate(-50%,-50%);
+  width:18.5%;
+  aspect-ratio:1;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  cursor:pointer;
+  z-index:4;
+  -webkit-tap-highlight-color:transparent;
+}
+.start::after{
+  content:"";
+  position:absolute;
+  inset:14%;
+  border-radius:50%;
+  box-shadow:0 0 0 2px rgba(112,235,255,.55),0 0 22px rgba(34,190,255,.65);
+  opacity:.5;
+  animation:ring 1.25s ease-in-out infinite alternate;
+}
+.start:active{transform:translate(-50%,-50%) scale(.94)}
+.start[disabled]{pointer-events:none}
+@keyframes ring{to{opacity:1;box-shadow:0 0 0 3px rgba(140,240,255,.82),0 0 36px rgba(36,178,255,.95)}}
+
+/* 選ばれたカプセルが排出口まで落ちる演出 */
+.fly{
+  position:absolute;
+  width:13.5%;
+  aspect-ratio:1;
+  border-radius:50%;
+  left:50%;
+  top:39%;
+  transform:translate(-50%,-50%);
+  opacity:0;
+  z-index:6;
+  pointer-events:none;
+}
+.fly::before,.fly::after{
+  content:"";
+  position:absolute;
+  left:7%;
+  width:86%;
+  height:42%;
+  border:2px solid rgba(255,255,255,.72);
+  box-shadow:inset 0 0 10px rgba(255,255,255,.23);
+}
+.fly::before{
+  top:7%;
+  border-radius:999px 999px 14px 14px;
+  background:linear-gradient(145deg,#67dcff,#0e69ff);
+}
+.fly::after{
+  bottom:7%;
+  border-radius:14px 14px 999px 999px;
+  background:linear-gradient(145deg,#0b54d2,#8adfff);
+}
+.fly .band{
+  position:absolute;
+  left:6%;right:6%;top:46%;height:8%;
+  border-radius:999px;background:rgba(255,255,255,.64);z-index:2;
+}
+.fly.gold::before,.fly.gold::after{
+  background:linear-gradient(145deg,#fff7b3 0%,#ffd439 25%,#9d5e00 62%,#ffec89 100%);
+  border-color:#fff2a2;
+}
+.fly.gold{
+  filter:drop-shadow(0 0 10px #ffe05b) drop-shadow(0 0 24px #ffad00);
+}
+.fly.go{
+  opacity:1;
+  animation:fall 1.15s cubic-bezier(.22,.75,.24,1) forwards;
+}
+@keyframes fall{
+  0%{top:39%;transform:translate(-50%,-50%) scale(.82) rotate(-8deg)}
+  46%{top:49%;transform:translate(-50%,-50%) scale(.92) rotate(8deg)}
+  74%{top:61%;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}
+  100%{top:77.4%;transform:translate(-50%,-50%) scale(.92) rotate(0)}
+}
+
+/* フラッシュ */
+.flash,.goldflash{
+  position:fixed;inset:0;pointer-events:none;opacity:0;z-index:20;
+}
+.flash{background:#fff}
+.goldflash{
+  background:
+    radial-gradient(circle at 50% 48%,#fff 0 2%,#ffe979 7%,rgba(255,182,0,.68) 20%,transparent 48%);
+}
+.flash.go{animation:flash .55s ease-out}
+.goldflash.go{animation:goldFlash .85s ease-out}
+@keyframes flash{0%{opacity:0}20%{opacity:.95}100%{opacity:0}}
+@keyframes goldFlash{0%{opacity:0;transform:scale(.45)}30%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
+
+/* 最終結果 */
+.result{
+  position:fixed;inset:0;
+  z-index:30;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(1,4,10,.82);
+  backdrop-filter:blur(8px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.result.show{opacity:1;pointer-events:auto}
+.resultbox{
+  width:min(78vw,330px);
+  aspect-ratio:1;
+  position:relative;
+}
+.half{
+  position:absolute;
+  left:50%;
+  width:58%;
+  height:29%;
+  transform:translateX(-50%);
+  border:2px solid rgba(255,255,255,.72);
+  box-shadow:0 0 30px currentColor,inset 0 0 18px rgba(255,255,255,.24);
+}
+.half.top{
+  top:34%;
+  border-radius:999px 999px 15px 15px;
+  background:linear-gradient(145deg,#76e5ff,#0b6cff);
+}
+.half.bottom{
+  top:51%;
+  border-radius:15px 15px 999px 999px;
+  background:linear-gradient(145deg,#0a56d5,#85e9ff);
+}
+.result.show .half.top{animation:openTop .85s .12s ease-out forwards}
+.result.show .half.bottom{animation:openBottom .85s .12s ease-out forwards}
+@keyframes openTop{to{transform:translate(-50%,-86%) rotate(-18deg)}}
+@keyframes openBottom{to{transform:translate(-50%,86%) rotate(18deg)}}
+
+.result.gold .half{
+  color:#ffd84d;
+  border-color:#fff0a0;
+}
+.result.gold .half.top,.result.gold .half.bottom{
+  background:linear-gradient(145deg,#fff6ad,#ffd233 35%,#a25f00 72%,#ffec8a);
+}
+.prize{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.2);
+  width:28%;aspect-ratio:1;border-radius:18%;
+  background:linear-gradient(145deg,#eafcff,#4bc7ff 35%,#5362ff 78%);
+  box-shadow:0 0 40px #50d7ff,0 0 80px rgba(94,88,255,.78);
+  opacity:0;
+}
+.result.show .prize{animation:prize .7s .6s ease-out forwards}
+.result.gold .prize{
+  background:linear-gradient(145deg,#fffbe9,#ffe45a 30%,#cc8100 72%,#fff1a4);
+  box-shadow:0 0 45px #fff0a4,0 0 100px #ffab00;
+}
+@keyframes prize{to{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(45deg)}}
+.resultText{
+  position:absolute;
+  left:50%;bottom:3%;
+  transform:translateX(-50%);
+  font-weight:900;
+  letter-spacing:.12em;
+  font-size:clamp(18px,5vw,28px);
+  text-shadow:0 0 20px currentColor;
+  white-space:nowrap;
+}
+.result.gold .resultText{color:#ffe16a}
+.closeHint{
+  position:absolute;left:50%;bottom:-8%;
+  transform:translateX(-50%);
+  font-size:11px;color:#aab7cd;white-space:nowrap;
+}
+
+/* テスト用：本番では display:none にする */
+.testPanel{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top));
+  left:50%;
+  transform:translateX(-50%);
+  z-index:40;
+  display:flex;
+  gap:6px;
+  padding:6px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  backdrop-filter:blur(8px);
+}
+.testPanel button{
+  border:0;border-radius:999px;
+  padding:7px 11px;
+  color:#fff;
+  background:#172033;
+  font-weight:700;
+  font-size:11px;
+}
+.testPanel button.active{background:#0c79ff}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="machine" id="machine">
+    <img src="gacha-machine.png" alt="ガチャマシーン">
+    <div class="grid" id="grid"></div>
+
+    <button class="start" id="startBtn" aria-label="ガチャを回す"></button>
+
+    <div class="fly" id="fly">
+      <span class="band"></span>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash"></div>
+<div class="goldflash" id="goldflash"></div>
+
+<div class="result" id="result">
+  <div class="resultbox">
+    <div class="half top"></div>
+    <div class="half bottom"></div>
+    <div class="prize"></div>
+    <div class="resultText" id="resultText">RESULT</div>
+    <div class="closeHint">タップで戻る</div>
+  </div>
+</div>
+
+<!-- 動作確認用。本番公開時はHTMLから削除してOK -->
+<div class="testPanel" id="testPanel">
+  <button data-mode="random" class="active">ランダム</button>
+  <button data-mode="normal">通常</button>
+  <button data-mode="jackpot">確定</button>
+</div>
+
+<script>
+/*
+=====================================================
+設定
+=====================================================
+*/
+const CONFIG = {
+  // 動作確認用の大当たり確率。
+  // 実際に景品を配る場合は、この値で抽選せず
+  // GAS等のサーバーで決めた結果を返してください。
+  DEMO_JACKPOT_RATE: 0.05,
+
+  // 本番時は false にすると上部のテスト切替を隠す
+  SHOW_TEST_PANEL: true,
+
+  // "random" / "normal" / "jackpot"
+  TEST_MODE: "random"
+};
+
+/*
+本番連携するときは、この関数だけ差し替える。
+
+例：
+async function getGachaResult(){
+  const response = await fetch("GASのURL");
+  const data = await response.json();
+  return {
+    jackpot: data.rank === 1,
+    rank: data.rank
+  };
+}
+*/
+async function getGachaResult(){
+  if(CONFIG.TEST_MODE === "jackpot") return { jackpot:true };
+  if(CONFIG.TEST_MODE === "normal")  return { jackpot:false };
+
+  return {
+    jackpot: Math.random() < CONFIG.DEMO_JACKPOT_RATE
+  };
+}
+
+/*
+=====================================================
+ここから下は基本触らなくてOK
+=====================================================
+*/
+const grid = document.getElementById("grid");
+const startBtn = document.getElementById("startBtn");
+const fly = document.getElementById("fly");
+const flash = document.getElementById("flash");
+const goldflash = document.getElementById("goldflash");
+const result = document.getElementById("result");
+const resultText = document.getElementById("resultText");
+const testPanel = document.getElementById("testPanel");
+
+let cells = [];
+let busy = false;
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
+
+function makeGrid(){
+  grid.innerHTML = "";
+  cells = [];
+  for(let i=0;i<16;i++){
+    const div = document.createElement("div");
+    div.className = "cell";
+    grid.appendChild(div);
+    cells.push(div);
+  }
+}
+makeGrid();
+
+if(!CONFIG.SHOW_TEST_PANEL){
+  testPanel.style.display = "none";
+}
+
+testPanel.addEventListener("click",(e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  CONFIG.TEST_MODE = btn.dataset.mode;
+  testPanel.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+});
+
+function clearCells(){
+  cells.forEach(c=>c.className="cell");
+}
+
+async function scanAnimation(){
+  for(let loop=0;loop<3;loop++){
+    for(let i=0;i<16;i++){
+      clearCells();
+      cells[i].classList.add("scan");
+      await sleep(42);
+    }
+    for(let i=15;i>=0;i--){
+      clearCells();
+      cells[i].classList.add("scan");
+      await sleep(30);
+    }
+  }
+  clearCells();
+}
+
+async function roulette(target){
+  let index=0;
+  const total=34;
+
+  for(let i=0;i<total;i++){
+    clearCells();
+
+    if(i < 24){
+      index = Math.floor(Math.random()*16);
+    }else{
+      index = (target + (total-i)) % 16;
+    }
+
+    cells[index].classList.add("scan");
+    await sleep(45 + i*4);
+  }
+
+  clearCells();
+  cells[target].classList.add("hit");
+  await sleep(420);
+}
+
+function doFlash(gold=false){
+  const el = gold ? goldflash : flash;
+  el.classList.remove("go");
+  void el.offsetWidth;
+  el.classList.add("go");
+}
+
+async function jackpotTransform(target){
+  cells[target].classList.remove("hit");
+  cells[target].classList.add("gold");
+
+  // 中心から金色の波を広げる
+  const r0=Math.floor(target/4);
+  const c0=target%4;
+
+  const order = cells
+    .map((cell,i)=>({
+      cell,
+      d:Math.abs(Math.floor(i/4)-r0)+Math.abs((i%4)-c0)
+    }))
+    .sort((a,b)=>a.d-b.d);
+
+  for(const item of order){
+    item.cell.animate(
+      [
+        {boxShadow:"0 0 0 rgba(255,200,0,0)"},
+        {boxShadow:"0 0 34px rgba(255,190,0,1)"},
+        {boxShadow:"0 0 0 rgba(255,200,0,0)"}
+      ],
+      {duration:300,easing:"ease-out"}
+    );
+    await sleep(40);
+  }
+
+  doFlash(true);
+  await sleep(500);
+}
+
+async function capsuleFall(jackpot){
+  fly.className = jackpot ? "fly gold" : "fly";
+  void fly.offsetWidth;
+  fly.classList.add("go");
+
+  await sleep(1180);
+}
+
+async function showResult(jackpot){
+  doFlash(jackpot);
+  await sleep(210);
+
+  result.className = jackpot ? "result gold show" : "result show";
+  resultText.textContent = jackpot ? "JACKPOT" : "RESULT";
+}
+
+async function runGacha(){
+  if(busy) return;
+
+  busy=true;
+  startBtn.disabled=true;
+  clearCells();
+
+  fly.className="fly";
+  result.className="result";
+
+  const serverResult = await getGachaResult();
+
+  await scanAnimation();
+
+  const target=Math.floor(Math.random()*16);
+  await roulette(target);
+
+  if(serverResult.jackpot){
+    await jackpotTransform(target);
+  }
+
+  await capsuleFall(serverResult.jackpot);
+  await showResult(serverResult.jackpot);
+
+  busy=false;
+  startBtn.disabled=false;
+}
+
+startBtn.addEventListener("click",runGacha);
+
+result.addEventListener("click",()=>{
+  result.className="result";
+  fly.className="fly";
+  clearCells();
+});
+</script>
+</body>
+</html>
