@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pixel Cube Gacha V15</title>
+<title>Pixel Cube Gacha V16</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{
@@ -169,21 +169,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const grid = document.getElementById("grid");
   const machine = document.getElementById("machine");
   const scanLight = document.getElementById("scanLight");
-
-  /* 音源はDOM順に依存させず、JS側で直接生成 */
-  const sfxButton = new Audio("button.mp3");
-  const sfxMachine = new Audio("machine.mp3");
-  const sfxRiser = new Audio("riser.mp3");
-  const sfxImpact = new Audio("impact.mp3");
-  const sfxJackpot = new Audio("jackpot.mp3");
-
-  [sfxButton,sfxMachine,sfxRiser,sfxImpact,sfxJackpot].forEach(audio => {
-    audio.preload = "auto";
-    audio.playsInline = true;
-    audio.load();
-  });
-
-  sfxMachine.loop = true;
   const buttonArea = document.getElementById("buttonArea");
   const actionButton = document.getElementById("actionButton");
   const chute = document.getElementById("chute");
@@ -203,23 +188,216 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 
-  function playSfx(audio, volume=1, restart=true, rate=1){
-    if(!audio) return;
-    try{
-      audio.volume = Math.max(0,Math.min(1,volume));
-      audio.playbackRate = rate;
-      if(restart) audio.currentTime = 0;
-      const p = audio.play();
-      if(p && p.catch) p.catch(()=>{});
-    }catch(e){}
+  /* =========================================
+     Web Audio Engine V16
+     外部MP3なし。演出の開始と同時にその場で音を生成する。
+  ========================================= */
+
+  let audioCtx = null;
+  let master = null;
+  let dry = null;
+  let wet = null;
+  let convolver = null;
+  let machineNodes = [];
+
+  function initAudio(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+
+      audioCtx = new AC({latencyHint:"interactive"});
+
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.value = -18;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 6;
+      compressor.attack.value = .002;
+      compressor.release.value = .18;
+
+      master = audioCtx.createGain();
+      master.gain.value = .78;
+      dry = audioCtx.createGain();
+      dry.gain.value = 1.0;
+      wet = audioCtx.createGain();
+      wet.gain.value = .23;
+
+      convolver = audioCtx.createConvolver();
+      const sec = .48;
+      const len = Math.floor(audioCtx.sampleRate * sec);
+      const impulse = audioCtx.createBuffer(2,len,audioCtx.sampleRate);
+      for(let ch=0; ch<2; ch++){
+        const data = impulse.getChannelData(ch);
+        for(let i=0;i<len;i++){
+          const decay = Math.pow(1-i/len,3.25);
+          data[i] = (Math.random()*2-1)*decay;
+        }
+      }
+      convolver.buffer = impulse;
+
+      dry.connect(master);
+      convolver.connect(wet);
+      wet.connect(master);
+      master.connect(compressor);
+      compressor.connect(audioCtx.destination);
+    }
+
+    if(audioCtx.state === "suspended") audioCtx.resume();
   }
 
-  function stopSfx(audio){
-    if(!audio) return;
-    try{
-      audio.pause();
-      audio.currentTime = 0;
-    }catch(e){}
+  function connectNode(node, room=.10){
+    if(!audioCtx || !dry) return;
+    node.connect(dry);
+    if(room>0 && convolver){
+      const send = audioCtx.createGain();
+      send.gain.value = room;
+      node.connect(send);
+      send.connect(convolver);
+    }
+  }
+
+  function oscSweep({f1=440,f2=null,dur=.15,type="sine",vol=.12,delay=0,room=.10}={}){
+    if(!audioCtx) return;
+    const t=audioCtx.currentTime+delay;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type=type;
+    osc.frequency.setValueAtTime(Math.max(20,f1),t);
+    if(f2) osc.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+dur);
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(vol,t+.012);
+    gain.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    osc.connect(gain);
+    connectNode(gain,room);
+    osc.start(t);
+    osc.stop(t+dur+.03);
+  }
+
+  function noiseSweep({dur=.15,vol=.10,delay=0,f1=500,f2=1800,filterType="bandpass",q=.8,room=.08}={}){
+    if(!audioCtx) return;
+    const len=Math.max(1,Math.floor(audioCtx.sampleRate*dur));
+    const buffer=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<len;i++) data[i]=Math.random()*2-1;
+
+    const src=audioCtx.createBufferSource();
+    const filter=audioCtx.createBiquadFilter();
+    const gain=audioCtx.createGain();
+    const t=audioCtx.currentTime+delay;
+    src.buffer=buffer;
+    filter.type=filterType;
+    filter.Q.value=q;
+    filter.frequency.setValueAtTime(Math.max(40,f1),t);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(40,f2),t+dur);
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(vol,t+.012);
+    gain.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(filter);
+    filter.connect(gain);
+    connectNode(gain,room);
+    src.start(t);
+  }
+
+  function metallicTick(delay=0,vol=.11){
+    oscSweep({f1:1850,f2:1120,dur:.065,type:"sine",vol,delay,room:.16});
+    oscSweep({f1:2800,f2:1700,dur:.045,type:"sine",vol:vol*.42,delay:delay+.012,room:.12});
+  }
+
+  function bassImpact(delay=0,vol=.22){
+    oscSweep({f1:105,f2:44,dur:.24,type:"sine",vol,delay,room:.03});
+    oscSweep({f1:58,f2:34,dur:.32,type:"sine",vol:vol*.70,delay:delay+.015,room:.02});
+    noiseSweep({dur:.12,vol:vol*.35,delay,f1:190,f2:620,filterType:"lowpass",q:.5,room:.03});
+  }
+
+  function soundButton(){ metallicTick(0,.15); bassImpact(.005,.17); }
+
+  function soundCubeMove(){
+    noiseSweep({dur:.24,vol:.115,f1:340,f2:1900,filterType:"bandpass",q:.6,room:.12});
+    oscSweep({f1:145,f2:210,dur:.22,type:"sine",vol:.07,room:.06});
+    metallicTick(.16,.055);
+  }
+
+  function soundSelect(){
+    metallicTick(0,.12);
+    oscSweep({f1:760,f2:640,dur:.22,type:"sine",vol:.08,delay:.01,room:.22});
+    oscSweep({f1:1180,f2:920,dur:.28,type:"sine",vol:.055,delay:.05,room:.25});
+  }
+
+  function soundJackpot(){
+    bassImpact(0,.27);
+    noiseSweep({dur:.68,vol:.18,f1:240,f2:5600,filterType:"bandpass",q:.5,room:.22});
+    oscSweep({f1:115,f2:180,dur:.68,type:"sine",vol:.11,room:.15});
+    oscSweep({f1:230,f2:360,dur:.58,type:"sine",vol:.08,delay:.08,room:.18});
+    oscSweep({f1:460,f2:720,dur:.48,type:"triangle",vol:.055,delay:.22,room:.22});
+    metallicTick(.48,.12); metallicTick(.60,.09);
+  }
+
+  function soundSink(){
+    noiseSweep({dur:.44,vol:.13,f1:2800,f2:240,filterType:"bandpass",q:.7,room:.10});
+    oscSweep({f1:290,f2:60,dur:.44,type:"sawtooth",vol:.055,room:.06});
+    bassImpact(.23,.15);
+  }
+
+  function soundChute(){
+    metallicTick(0,.14); metallicTick(.06,.09);
+    noiseSweep({dur:.20,vol:.105,delay:.07,f1:980,f2:240,filterType:"lowpass",q:.7,room:.06});
+    bassImpact(.12,.23);
+  }
+
+  function soundOpenCharge(isJackpot){
+    if(isJackpot){
+      noiseSweep({dur:.74,vol:.18,f1:220,f2:6900,filterType:"bandpass",q:.5,room:.24});
+      oscSweep({f1:125,f2:320,dur:.72,type:"sine",vol:.11,room:.15});
+      oscSweep({f1:260,f2:760,dur:.65,type:"triangle",vol:.072,delay:.07,room:.20});
+      oscSweep({f1:520,f2:1520,dur:.52,type:"sine",vol:.05,delay:.17,room:.28});
+    }else{
+      noiseSweep({dur:.60,vol:.145,f1:250,f2:4700,filterType:"bandpass",q:.6,room:.20});
+      oscSweep({f1:150,f2:340,dur:.56,type:"sine",vol:.09,room:.12});
+      oscSweep({f1:360,f2:840,dur:.46,type:"triangle",vol:.052,delay:.08,room:.18});
+    }
+  }
+
+  function soundWhiteFlash(){
+    bassImpact(0,.31);
+    noiseSweep({dur:.48,vol:.26,f1:7200,f2:390,filterType:"lowpass",q:.38,room:.18});
+    noiseSweep({dur:.28,vol:.16,delay:.012,f1:420,f2:5600,filterType:"bandpass",q:.45,room:.22});
+    oscSweep({f1:980,f2:450,dur:.34,type:"sine",vol:.075,delay:.012,room:.22});
+  }
+
+  function soundGoldFlash(){
+    bassImpact(0,.37); bassImpact(.09,.22);
+    noiseSweep({dur:.62,vol:.29,f1:8000,f2:340,filterType:"lowpass",q:.35,room:.25});
+    noiseSweep({dur:.48,vol:.19,delay:.02,f1:360,f2:7600,filterType:"bandpass",q:.42,room:.30});
+    oscSweep({f1:130,f2:82,dur:.78,type:"sine",vol:.14,room:.18});
+    oscSweep({f1:262,f2:196,dur:.66,type:"triangle",vol:.10,delay:.03,room:.24});
+    oscSweep({f1:392,f2:294,dur:.66,type:"sine",vol:.085,delay:.08,room:.30});
+    oscSweep({f1:523,f2:392,dur:.72,type:"sine",vol:.075,delay:.13,room:.32});
+    metallicTick(.16,.14); metallicTick(.26,.11); metallicTick(.36,.09);
+  }
+
+  function startMachineHum(){
+    if(!audioCtx) return;
+    stopMachineHum();
+    const osc1=audioCtx.createOscillator();
+    const osc2=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    const lfo=audioCtx.createOscillator();
+    const lfoGain=audioCtx.createGain();
+    osc1.type="sine"; osc2.type="triangle";
+    osc1.frequency.value=58; osc2.frequency.value=116;
+    g.gain.value=.035; lfo.frequency.value=2.1; lfoGain.gain.value=.012;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    osc1.connect(g); osc2.connect(g); connectNode(g,.08);
+    osc1.start(); osc2.start(); lfo.start();
+    machineNodes=[osc1,osc2,lfo,g];
+  }
+
+  function stopMachineHum(){
+    if(!machineNodes.length) return;
+    for(const node of machineNodes){
+      try{ if(node.stop) node.stop(); }catch(e){}
+      try{ node.disconnect(); }catch(e){}
+    }
+    machineNodes=[];
   }
 
   function startMachineGlow(){
@@ -295,6 +473,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function moveGroup(slots){
+    soundCubeMove();
     const uniqueSlots = [...new Set(slots)];
     const group = uniqueSlots.map(slot => unitAt(slot));
     if(group.some(unit => !unit)) return;
@@ -340,6 +519,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     decoys.forEach(unit => unit.classList.add("selected"));
     await sleep(200);
     decoys.forEach(unit => unit.classList.remove("selected"));
+    soundSelect();
     target.classList.add("selected");
     await sleep(320);
     return target;
@@ -370,6 +550,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function jackpotEffect(target){
+    soundJackpot();
     units.forEach(unit => { if(unit !== target){ unit.classList.add("dim"); } });
     target.classList.remove("selected");
     target.classList.add("jackpot");
@@ -377,6 +558,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function sinkUnit(target){
+    soundSink();
     const slot = Number(target.dataset.slot);
     const p = slotPosition(slot);
     target.classList.remove("selected");
@@ -386,6 +568,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function releaseCapsule(isJackpot){
+    soundChute();
     outCapsule.src = isJackpot ? "capsule-gold.png" : "capsule.png";
     chute.classList.remove("active");
     outCapsule.classList.remove("show");
@@ -397,6 +580,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function openCapsule(isJackpot){
+    soundOpenCharge(isJackpot);
     const src = isJackpot ? "capsule-gold.png" : "capsule.png";
     openTop.src = src;
     openBottom.src = src;
@@ -418,7 +602,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     actionButton.disabled = true;
 
     startMachineGlow();
-    playSfx(sfxMachine,1.0,true,1.0);
+    startMachineHum();
 
     buildGrid();
     outCapsule.classList.remove("show");
@@ -437,7 +621,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     const target = await selectTarget(isJackpot);
     await routeToExit(target);
     if(isJackpot){
-      playSfx(sfxJackpot,1.0,true,1.0);
       await jackpotEffect(target);
     }
     await sleep(140);
@@ -445,19 +628,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(160);
     await releaseCapsule(isJackpot);
     await sleep(140);
-    playSfx(sfxRiser,isJackpot ? 1.0 : .95,true,isJackpot ? 1.0 : 1.05);
     await openCapsule(isJackpot);
-    playSfx(sfxImpact,1.0,true,isJackpot ? .94 : 1.0);
-
     if(isJackpot){
+      soundGoldFlash();
       fireFlash(goldFlash);
     }else{
+      soundWhiteFlash();
       fireFlash(whiteFlash);
     }
     await sleep(isJackpot ? 1050 : 900);
     openLayer.className = "open-layer";
 
-    stopSfx(sfxMachine);
+    stopMachineHum();
     stopMachineGlow();
 
     busy = false;
@@ -467,7 +649,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   actionButton.addEventListener("pointerdown", () => {
     if(busy) return;
 
-    playSfx(sfxButton,1.0,true,1.0);
+    initAudio();
+    soundButton();
 
     buttonArea.classList.add("pressed");
 
