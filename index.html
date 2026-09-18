@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pixel Cube Gacha FINAL</title>
-
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{
@@ -28,54 +27,50 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 /* ===== 4×4 ===== */
 .grid{
   position:absolute;
-  left:12.75%;
-  top:7.75%;
-  width:74.55%;
-  height:48.10%;
+  left:12.95%;
+  top:8.2%;
+  width:74.1%;
+  height:47.3%;
   z-index:10;
   overflow:hidden;
 }
 .unit{
   position:absolute;left:0;top:0;
   transition:
-    transform .42s cubic-bezier(.18,.82,.24,1.05),
-    filter .20s ease,
-    opacity .20s ease;
+    transform .54s cubic-bezier(.16,.84,.24,1.04),
+    filter .24s ease,
+    opacity .22s ease;
   will-change:transform;
   transform-origin:center;
 }
 .unit.moving{
   z-index:30;
-  filter:brightness(1.20) drop-shadow(0 0 13px rgba(68,201,255,.68));
+  filter:
+    brightness(1.16)
+    drop-shadow(0 0 10px rgba(68,201,255,.58))
+    drop-shadow(0 8px 14px rgba(0,0,0,.22));
 }
 .unit.selected{
   z-index:36;
   filter:
-    brightness(1.32)
-    drop-shadow(0 0 13px rgba(180,244,255,.96))
-    drop-shadow(0 0 26px rgba(33,169,255,.88));
+    brightness(1.28)
+    drop-shadow(0 0 10px rgba(180,244,255,.92))
+    drop-shadow(0 0 20px rgba(33,169,255,.8));
 }
 .unit.dim{
-  opacity:.28;
-  filter:brightness(.54) saturate(.62);
+  opacity:.24;
+  filter:brightness(.52) saturate(.58);
 }
 .unit.gold-unit{
-  filter:drop-shadow(0 0 12px rgba(255,205,70,.50));
+  filter:drop-shadow(0 0 10px rgba(255,205,70,.42));
 }
 .unit.jackpot{
   z-index:42;
   animation:goldPulse .48s ease-in-out infinite alternate;
 }
 @keyframes goldPulse{
-  from{
-    filter:brightness(1.06) drop-shadow(0 0 12px rgba(255,205,70,.55));
-  }
-  to{
-    filter:
-      brightness(1.30)
-      drop-shadow(0 0 20px rgba(255,236,150,.95))
-      drop-shadow(0 0 38px rgba(255,172,0,1));
-  }
+  from{filter:brightness(1.05) drop-shadow(0 0 10px rgba(255,205,70,.55))}
+  to{filter:brightness(1.3) drop-shadow(0 0 18px rgba(255,236,150,.95)) drop-shadow(0 0 34px rgba(255,172,0,.95))}
 }
 .unit-cube{
   position:absolute;inset:0;width:100%;height:100%;
@@ -88,11 +83,11 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 .unit.sink{
   z-index:48;
   transition:
-    transform .58s cubic-bezier(.24,.72,.24,1),
-    opacity .40s ease .12s,
+    transform .66s cubic-bezier(.22,.72,.24,1),
+    opacity .46s ease .12s,
     filter .25s ease;
   opacity:0;
-  filter:brightness(1.65);
+  filter:brightness(1.55);
 }
 
 /* ===== ボタン ===== */
@@ -139,14 +134,12 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   opacity:0;
   filter:drop-shadow(0 8px 10px rgba(0,0,0,.58));
 }
-.out-capsule.show{
-  animation:outCapsule .96s cubic-bezier(.17,.84,.24,1.14) forwards;
-}
+.out-capsule.show{animation:outCapsule 1.02s cubic-bezier(.17,.84,.24,1.14) forwards}
 @keyframes outCapsule{
   0%{top:-34%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}
   18%{opacity:1}
-  58%{top:50%;transform:translateX(-50%) rotate(8deg) scale(.92)}
-  80%{top:68%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}
+  55%{top:52%;transform:translateX(-50%) rotate(8deg) scale(.93)}
+  78%{top:69%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}
   100%{top:63%;opacity:1;transform:translateX(-50%) rotate(0) scale(.99)}
 }
 
@@ -155,13 +148,11 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   position:fixed;inset:0;
   z-index:85;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(1,4,12,.72);
+  background:rgba(1,4,12,.64);
   backdrop-filter:blur(5px);
   opacity:0;pointer-events:none;
 }
-.open-layer.show{
-  opacity:1;
-}
+.open-layer.show{opacity:1}
 .open-stage{
   position:relative;
   width:min(58vw,280px);
@@ -172,82 +163,33 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   inset:0;
   width:100%;height:100%;
   object-fit:contain;
-  filter:drop-shadow(0 0 20px rgba(70,190,255,.55));
+  filter:drop-shadow(0 0 20px rgba(70,190,255,.48));
 }
-.open-half.top{
-  clip-path:inset(0 0 50% 0);
+.open-half.top{clip-path:inset(0 0 50% 0)}
+.open-half.bottom{clip-path:inset(50% 0 0 0)}
+.open-layer.opening .open-half.top{animation:openTop .62s cubic-bezier(.18,.84,.25,1) forwards}
+.open-layer.opening .open-half.bottom{animation:openBottom .62s cubic-bezier(.18,.84,.25,1) forwards}
+.open-layer.gold .open-half{filter:drop-shadow(0 0 24px rgba(255,210,70,.58))}
+@keyframes openTop{to{transform:translateY(-40%) rotate(-12deg) scale(1.01)}}
+@keyframes openBottom{to{transform:translateY(40%) rotate(12deg) scale(1.01)}}
+.open-beam{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.3);
+  width:34%;height:34%;border-radius:50%;opacity:0;
+  background:radial-gradient(circle,#ffffff 0 18%,rgba(255,255,255,.92) 35%,rgba(120,220,255,.36) 68%,transparent 78%);
+  filter:blur(8px);
 }
-.open-half.bottom{
-  clip-path:inset(50% 0 0 0);
-}
-.open-layer.opening .open-half.top{
-  animation:openTop .68s cubic-bezier(.18,.84,.25,1) forwards;
-}
-.open-layer.opening .open-half.bottom{
-  animation:openBottom .68s cubic-bezier(.18,.84,.25,1) forwards;
-}
-@keyframes openTop{
-  to{transform:translateY(-42%) rotate(-13deg) scale(1.02)}
-}
-@keyframes openBottom{
-  to{transform:translateY(42%) rotate(13deg) scale(1.02)}
-}
-.open-core{
-  position:absolute;left:50%;top:50%;
-  width:18%;aspect-ratio:1/1;
-  transform:translate(-50%,-50%) scale(.2);
-  border-radius:50%;
-  opacity:0;
-  background:#d8f7ff;
-  box-shadow:
-    0 0 28px #70ddff,
-    0 0 70px rgba(65,142,255,.9);
-}
-.open-layer.opening .open-core{
-  animation:core .45s .30s ease-out forwards;
-}
-.open-layer.gold .open-core{
-  background:#fff3aa;
-  box-shadow:
-    0 0 32px #fff0a5,
-    0 0 85px rgba(255,174,0,.95);
-}
-@keyframes core{
-  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
-}
+.open-layer.opening .open-beam{animation:beamPop .46s .24s ease-out forwards}
+.open-layer.gold .open-beam{background:radial-gradient(circle,#fffbd9 0 18%,rgba(255,248,183,.98) 35%,rgba(255,210,60,.44) 68%,transparent 78%)}
+@keyframes beamPop{to{opacity:1;transform:translate(-50%,-50%) scale(1.22)}}
 
 /* ===== 最終フラッシュ ===== */
-.flash{
-  position:fixed;inset:0;
-  opacity:0;pointer-events:none;
-  z-index:100;
-}
+.flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:100}
 #whiteFlash{background:#fff}
-#goldFlash{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      #fff 0 3%,
-      #fff5b2 10%,
-      rgba(255,190,0,.76) 30%,
-      rgba(255,149,0,.18) 56%,
-      transparent 72%
-    );
-}
+#goldFlash{background:radial-gradient(circle at 50% 48%,#fff 0 4%,#fff5b2 12%,rgba(255,190,0,.8) 34%,rgba(255,149,0,.2) 58%,transparent 72%)}
 #whiteFlash.go{animation:whiteFlash .62s ease-out}
-#goldFlash.go{animation:goldFlash .90s ease-out}
-@keyframes whiteFlash{
-  0%{opacity:0}
-  25%{opacity:1}
-  55%{opacity:.65}
-  100%{opacity:0}
-}
-@keyframes goldFlash{
-  0%{opacity:0;transform:scale(.55)}
-  28%{opacity:1}
-  58%{opacity:.78}
-  100%{opacity:0;transform:scale(1.45)}
-}
+#goldFlash.go{animation:goldFlash .96s ease-out}
+@keyframes whiteFlash{0%{opacity:0}25%{opacity:1}55%{opacity:.68}100%{opacity:0}}
+@keyframes goldFlash{0%{opacity:0;transform:scale(.55)}28%{opacity:1}58%{opacity:.8}100%{opacity:0;transform:scale(1.45)}}
 
 /* ===== テスト用 ===== */
 .mode-panel{
@@ -272,52 +214,39 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 }
 </style>
 </head>
-
 <body>
-
 <div class="mode-panel" id="modePanel">
   <button data-mode="normal">通常</button>
   <button data-mode="random" class="active">ランダム</button>
   <button data-mode="jackpot">確定</button>
 </div>
-
 <div class="stage">
   <div class="machine">
-
     <img class="machine-base" src="machine-base.png" alt="ガチャマシーン">
-
     <div class="grid" id="grid"></div>
-
     <div class="button-area" id="buttonArea">
       <img id="buttonNormal" class="button-img" src="button.png" alt="">
       <img id="buttonPressed" class="button-img" src="button-pressed.png" alt="">
       <button id="actionButton" class="action-button" aria-label="ガチャを回す"></button>
     </div>
-
     <div class="chute" id="chute">
       <img class="chute-glow" src="chute-glow.png" alt="">
       <img id="outCapsule" class="out-capsule" src="capsule.png" alt="">
     </div>
-
   </div>
 </div>
-
 <div class="open-layer" id="openLayer">
   <div class="open-stage">
     <img id="openTop" class="open-half top" src="capsule.png" alt="">
     <img id="openBottom" class="open-half bottom" src="capsule.png" alt="">
-    <div class="open-core"></div>
+    <div class="open-beam"></div>
   </div>
 </div>
-
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
-
-<div class="version">V8 / 2〜3キューブ同時移動・OPEN演出</div>
-
+<div class="version">V9 / 隙間調整・OPEN改善</div>
 <script>
 (() => {
-
   const grid = document.getElementById("grid");
   const buttonArea = document.getElementById("buttonArea");
   const actionButton = document.getElementById("actionButton");
@@ -335,1104 +264,236 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   let mode = "random";
   let goldUnit = null;
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
-
-
-  /* =========================================
-     座標
-  ========================================= */
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   function metrics(){
-
-    const gapX =
-      grid.clientWidth * .022;
-
-    const gapY =
-      grid.clientHeight * .022;
-
-    const width =
-      (
-        grid.clientWidth -
-        gapX * 3
-      ) / 4;
-
-    const height =
-      (
-        grid.clientHeight -
-        gapY * 3
-      ) / 4;
-
-    return {
-      gapX,
-      gapY,
-      width,
-      height
-    };
+    const gapX = grid.clientWidth * .009;
+    const gapY = grid.clientHeight * .009;
+    const width = (grid.clientWidth - gapX * 3) / 4;
+    const height = (grid.clientHeight - gapY * 3) / 4;
+    return {gapX, gapY, width, height};
   }
-
 
   function slotPosition(slot){
-
-    const m =
-      metrics();
-
+    const m = metrics();
     return {
-
-      x:
-        (slot % 4) *
-        (m.width + m.gapX),
-
-      y:
-        Math.floor(slot / 4) *
-        (m.height + m.gapY),
-
-      width:
-        m.width,
-
-      height:
-        m.height
-
+      x:(slot % 4) * (m.width + m.gapX),
+      y:Math.floor(slot / 4) * (m.height + m.gapY),
+      width:m.width,
+      height:m.height
     };
   }
 
-
-  function placeUnit(
-    unit,
-    slot,
-    animate = true
-  ){
-
-    const p =
-      slotPosition(slot);
-
-    if(!animate){
-      unit.style.transition =
-        "none";
-    }
-
-    unit.style.width =
-      p.width + "px";
-
-    unit.style.height =
-      p.height + "px";
-
-    unit.style.transform =
-      `translate3d(
-        ${p.x}px,
-        ${p.y}px,
-        0
-      )`;
-
-    unit.dataset.slot =
-      slot;
-
-    if(!animate){
-
-      unit.offsetHeight;
-
-      unit.style.transition =
-        "";
-    }
+  function placeUnit(unit, slot, animate = true){
+    const p = slotPosition(slot);
+    if(!animate){ unit.style.transition = "none"; }
+    unit.style.width = p.width + "px";
+    unit.style.height = p.height + "px";
+    unit.style.transform = `translate3d(${p.x}px,${p.y}px,0)`;
+    unit.dataset.slot = slot;
+    if(!animate){ unit.offsetHeight; unit.style.transition = ""; }
   }
-
-
-  /* =========================================
-     16キューブ生成
-     通常時もゴールドを1個入れる
-  ========================================= */
 
   function buildGrid(){
-
-    grid.innerHTML =
-      "";
-
-    units =
-      [];
-
-    const goldIndex =
-      Math.floor(
-        Math.random() * 16
-      );
-
-    for(
-      let i = 0;
-      i < 16;
-      i++
-    ){
-
-      const isGold =
-        i === goldIndex;
-
-      const unit =
-        document.createElement(
-          "div"
-        );
-
-      unit.className =
-        isGold
-        ?
-        "unit gold-unit"
-        :
-        "unit";
-
-      unit.dataset.id =
-        i;
-
-      unit.dataset.gold =
-        isGold
-        ?
-        "1"
-        :
-        "0";
-
+    grid.innerHTML = "";
+    units = [];
+    const goldIndex = Math.floor(Math.random() * 16);
+    for(let i=0;i<16;i++){
+      const isGold = i === goldIndex;
+      const unit = document.createElement("div");
+      unit.className = isGold ? "unit gold-unit" : "unit";
+      unit.dataset.id = i;
+      unit.dataset.gold = isGold ? "1" : "0";
       unit.innerHTML = `
-
-        <img
-          class="unit-cube"
-          src="cube.png"
-          alt=""
-        >
-
-        <img
-          class="unit-capsule"
-          src="${
-            isGold
-            ?
-            "capsule-gold.png"
-            :
-            "capsule.png"
-          }"
-          alt=""
-        >
-
+        <img class="unit-cube" src="cube.png" alt="">
+        <img class="unit-capsule" src="${isGold ? "capsule-gold.png" : "capsule.png"}" alt="">
       `;
-
-      grid.appendChild(
-        unit
-      );
-
-      units.push(
-        unit
-      );
-
-      placeUnit(
-        unit,
-        i,
-        false
-      );
-
-      if(isGold){
-
-        goldUnit =
-          unit;
-      }
+      grid.appendChild(unit);
+      units.push(unit);
+      placeUnit(unit, i, false);
+      if(isGold) goldUnit = unit;
     }
   }
 
-
-  function unitAt(slot){
-
-    return units.find(
-
-      unit =>
-
-      Number(
-        unit.dataset.slot
-      ) === slot
-
-    );
-  }
-
+  const unitAt = slot => units.find(unit => Number(unit.dataset.slot) === slot);
 
   function neighbours(slot){
-
-    const row =
-      Math.floor(
-        slot / 4
-      );
-
-    const column =
-      slot % 4;
-
-    const result =
-      [];
-
-    if(row > 0){
-
-      result.push(
-        slot - 4
-      );
-    }
-
-    if(row < 3){
-
-      result.push(
-        slot + 4
-      );
-    }
-
-    if(column > 0){
-
-      result.push(
-        slot - 1
-      );
-    }
-
-    if(column < 3){
-
-      result.push(
-        slot + 1
-      );
-    }
-
+    const row = Math.floor(slot / 4);
+    const column = slot % 4;
+    const result = [];
+    if(row > 0) result.push(slot - 4);
+    if(row < 3) result.push(slot + 4);
+    if(column > 0) result.push(slot - 1);
+    if(column < 3) result.push(slot + 1);
     return result;
   }
 
-
-  /* =========================================
-     2〜3キューブ同時移動
-  ========================================= */
-
-  async function moveGroup(
-    slots
-  ){
-
-    const group =
-      slots.map(
-        slot =>
-        unitAt(slot)
-      );
-
-    if(
-      group.some(
-        unit =>
-        !unit
-      )
-    ){
-      return;
-    }
-
-
-    group.forEach(
-      unit =>
-      unit.classList.add(
-        "moving"
-      )
-    );
-
-
-    const destinations =
-      slots.slice(1);
-
-    destinations.push(
-      slots[0]
-    );
-
-
-    group.forEach(
-      (unit,index) => {
-
-        placeUnit(
-          unit,
-          destinations[index],
-          true
-        );
-      }
-    );
-
-
-    await sleep(
-      440
-    );
-
-
-    group.forEach(
-      unit =>
-      unit.classList.remove(
-        "moving"
-      )
-    );
+  async function moveGroup(slots){
+    const uniqueSlots = [...new Set(slots)];
+    const group = uniqueSlots.map(slot => unitAt(slot));
+    if(group.some(unit => !unit)) return;
+    group.forEach(unit => unit.classList.add("moving"));
+    const destinations = uniqueSlots.slice(1);
+    destinations.push(uniqueSlots[0]);
+    group.forEach((unit,index) => placeUnit(unit, destinations[index], true));
+    await sleep(560);
+    group.forEach(unit => unit.classList.remove("moving"));
   }
 
-
   function makeConnectedGroup(){
-
-    const count =
-      Math.random() < .52
-      ?
-      2
-      :
-      3;
-
-    const first =
-      Math.floor(
-        Math.random() * 16
-      );
-
-    const slots =
-      [first];
-
-    let current =
-      first;
-
-    while(
-      slots.length <
-      count
-    ){
-
-      const candidates =
-        neighbours(current)
-        .filter(
-          slot =>
-          !slots.includes(slot)
-        );
-
-      if(
-        candidates.length === 0
-      ){
-
-        break;
-      }
-
-      const next =
-        candidates[
-          Math.floor(
-            Math.random() *
-            candidates.length
-          )
-        ];
-
-      slots.push(
-        next
-      );
-
-      current =
-        next;
+    const count = Math.random() < .58 ? 2 : 3;
+    const first = Math.floor(Math.random() * 16);
+    const slots = [first];
+    let current = first;
+    while(slots.length < count){
+      const candidates = neighbours(current).filter(slot => !slots.includes(slot));
+      if(candidates.length === 0) break;
+      const next = candidates[Math.floor(Math.random() * candidates.length)];
+      slots.push(next);
+      current = next;
     }
-
     return slots;
   }
 
-
   async function shuffle(){
-
-    for(
-      let i = 0;
-      i < 9;
-      i++
-    ){
-
-      const group =
-        makeConnectedGroup();
-
-      await moveGroup(
-        group
-      );
-
-      await sleep(
-        45
-      );
+    for(let i=0;i<8;i++){
+      await moveGroup(makeConnectedGroup());
+      await sleep(65);
     }
   }
 
-
-  /* =========================================
-     当選選択
-  ========================================= */
-
-  async function selectTarget(
-    isJackpot
-  ){
-
+  async function selectTarget(isJackpot){
     let target;
-
     if(isJackpot){
-
-      target =
-        goldUnit;
-
+      target = goldUnit;
     }else{
-
-      const normalUnits =
-        units.filter(
-          unit =>
-          unit.dataset.gold !== "1"
-        );
-
-      target =
-        normalUnits[
-          Math.floor(
-            Math.random() *
-            normalUnits.length
-          )
-        ];
+      const normalUnits = units.filter(unit => unit.dataset.gold !== "1");
+      target = normalUnits[Math.floor(Math.random() * normalUnits.length)];
     }
-
-
-    const decoys =
-      [...units]
-
-      .filter(
-        unit =>
-        unit !== target
-      )
-
-      .sort(
-        () =>
-        Math.random() -
-        .5
-      )
-
-      .slice(
-        0,
-        2
-      );
-
-
-    decoys.forEach(
-      unit =>
-      unit.classList.add(
-        "selected"
-      )
-    );
-
-    await sleep(
-      230
-    );
-
-
-    decoys.forEach(
-      unit =>
-      unit.classList.remove(
-        "selected"
-      )
-    );
-
-
-    target.classList.add(
-      "selected"
-    );
-
-
-    await sleep(
-      360
-    );
-
-
+    const decoys = [...units].filter(unit => unit !== target).sort(() => Math.random() - .5).slice(0,2);
+    decoys.forEach(unit => unit.classList.add("selected"));
+    await sleep(200);
+    decoys.forEach(unit => unit.classList.remove("selected"));
+    target.classList.add("selected");
+    await sleep(320);
     return target;
   }
 
-
-  /* =========================================
-     ターゲットを排出口側へ
-     ターゲット＋周囲1〜2個を一緒に動かす
-  ========================================= */
-
-  async function routeToExit(
-    target
-  ){
-
-    let slot =
-      Number(
-        target.dataset.slot
-      );
-
-
-    while(
-      Math.floor(slot / 4) <
-      3
-    ){
-
-      const next =
-        slot + 4;
-
-      const extraCandidates =
-        neighbours(next)
-        .filter(
-          s =>
-          s !== slot
-        );
-
-      if(
-        extraCandidates.length
-      ){
-
-        const extra =
-          extraCandidates[
-            Math.floor(
-              Math.random() *
-              extraCandidates.length
-            )
-          ];
-
-        await moveGroup(
-          [
-            slot,
-            next,
-            extra
-          ]
-        );
-
-      }else{
-
-        await moveGroup(
-          [
-            slot,
-            next
-          ]
-        );
-      }
-
-      slot =
-        Number(
-          target.dataset.slot
-        );
+  async function routeToExit(target){
+    let slot = Number(target.dataset.slot);
+    while(Math.floor(slot / 4) < 3){
+      const next = slot + 4;
+      const extraCandidates = neighbours(next).filter(s => s !== slot);
+      await moveGroup(extraCandidates.length ? [slot, next, extraCandidates[0]] : [slot, next]);
+      slot = Number(target.dataset.slot);
     }
-
-
-    while(
-      (slot % 4) >
-      1
-    ){
-
-      const next =
-        slot - 1;
-
-      const extraCandidates =
-        neighbours(next)
-        .filter(
-          s =>
-          s !== slot
-        );
-
-      if(
-        extraCandidates.length
-      ){
-
-        await moveGroup(
-          [
-            slot,
-            next,
-            extraCandidates[0]
-          ]
-        );
-
-      }else{
-
-        await moveGroup(
-          [
-            slot,
-            next
-          ]
-        );
-      }
-
-      slot =
-        Number(
-          target.dataset.slot
-        );
+    while((slot % 4) > 1){
+      const next = slot - 1;
+      const extraCandidates = neighbours(next).filter(s => s !== slot);
+      await moveGroup(extraCandidates.length ? [slot, next, extraCandidates[0]] : [slot, next]);
+      slot = Number(target.dataset.slot);
     }
-
-
-    while(
-      (slot % 4) <
-      1
-    ){
-
-      const next =
-        slot + 1;
-
-      const extraCandidates =
-        neighbours(next)
-        .filter(
-          s =>
-          s !== slot
-        );
-
-      if(
-        extraCandidates.length
-      ){
-
-        await moveGroup(
-          [
-            slot,
-            next,
-            extraCandidates[0]
-          ]
-        );
-
-      }else{
-
-        await moveGroup(
-          [
-            slot,
-            next
-          ]
-        );
-      }
-
-      slot =
-        Number(
-          target.dataset.slot
-        );
+    while((slot % 4) < 1){
+      const next = slot + 1;
+      const extraCandidates = neighbours(next).filter(s => s !== slot);
+      await moveGroup(extraCandidates.length ? [slot, next, extraCandidates[0]] : [slot, next]);
+      slot = Number(target.dataset.slot);
     }
-
-
-    target.classList.add(
-      "selected"
-    );
-
-    await sleep(
-      260
-    );
+    target.classList.add("selected");
+    await sleep(260);
   }
 
-
-  /* =========================================
-     確定演出
-  ========================================= */
-
-  async function jackpotEffect(
-    target
-  ){
-
-    units.forEach(
-      unit => {
-
-        if(
-          unit !== target
-        ){
-
-          unit.classList.add(
-            "dim"
-          );
-        }
-      }
-    );
-
-
-    target.classList.remove(
-      "selected"
-    );
-
-    target.classList.add(
-      "jackpot"
-    );
-
-
-    await sleep(
-      520
-    );
+  async function jackpotEffect(target){
+    units.forEach(unit => { if(unit !== target){ unit.classList.add("dim"); } });
+    target.classList.remove("selected");
+    target.classList.add("jackpot");
+    await sleep(520);
   }
 
-
-  /* =========================================
-     キューブ本体収納
-  ========================================= */
-
-  async function sinkUnit(
-    target
-  ){
-
-    const slot =
-      Number(
-        target.dataset.slot
-      );
-
-    const p =
-      slotPosition(slot);
-
-
-    target.classList.remove(
-      "selected"
-    );
-
-
-    target.classList.add(
-      "sink"
-    );
-
-
-    target.style.transform =
-      `translate3d(
-        ${p.x}px,
-        ${p.y + p.height * .95}px,
-        0
-      )
-      scale(.58)`;
-
-
-    await sleep(
-      600
-    );
+  async function sinkUnit(target){
+    const slot = Number(target.dataset.slot);
+    const p = slotPosition(slot);
+    target.classList.remove("selected");
+    target.classList.add("sink");
+    target.style.transform = `translate3d(${p.x}px,${p.y + p.height * .95}px,0) scale(.58)`;
+    await sleep(680);
   }
 
-
-  /* =========================================
-     排出口
-  ========================================= */
-
-  async function releaseCapsule(
-    isJackpot
-  ){
-
-    outCapsule.src =
-      isJackpot
-      ?
-      "capsule-gold.png"
-      :
-      "capsule.png";
-
-
-    chute.classList.remove(
-      "active"
-    );
-
-
-    outCapsule.classList.remove(
-      "show"
-    );
-
-
+  async function releaseCapsule(isJackpot){
+    outCapsule.src = isJackpot ? "capsule-gold.png" : "capsule.png";
+    chute.classList.remove("active");
+    outCapsule.classList.remove("show");
     void outCapsule.offsetWidth;
-
-
-    chute.classList.add(
-      "active"
-    );
-
-
-    outCapsule.classList.add(
-      "show"
-    );
-
-
-    if(
-      navigator.vibrate
-    ){
-
-      navigator.vibrate(
-        [18,35,22]
-      );
-    }
-
-
-    await sleep(
-      980
-    );
+    chute.classList.add("active");
+    outCapsule.classList.add("show");
+    if(navigator.vibrate){ navigator.vibrate([18,35,22]); }
+    await sleep(1040);
   }
 
-
-  /* =========================================
-     カプセルOPEN
-  ========================================= */
-
-  async function openCapsule(
-    isJackpot
-  ){
-
-    const src =
-      isJackpot
-      ?
-      "capsule-gold.png"
-      :
-      "capsule.png";
-
-
-    openTop.src =
-      src;
-
-    openBottom.src =
-      src;
-
-
-    openLayer.className =
-      isJackpot
-      ?
-      "open-layer show gold"
-      :
-      "open-layer show";
-
-
-    await sleep(
-      120
-    );
-
-
-    openLayer.classList.add(
-      "opening"
-    );
-
-
-    await sleep(
-      780
-    );
+  async function openCapsule(isJackpot){
+    const src = isJackpot ? "capsule-gold.png" : "capsule.png";
+    openTop.src = src;
+    openBottom.src = src;
+    openLayer.className = isJackpot ? "open-layer show gold" : "open-layer show";
+    await sleep(110);
+    openLayer.classList.add("opening");
+    await sleep(760);
   }
 
-
-  function fireFlash(
-    element
-  ){
-
-    element.classList.remove(
-      "go"
-    );
-
+  function fireFlash(element){
+    element.classList.remove("go");
     void element.offsetWidth;
-
-    element.classList.add(
-      "go"
-    );
+    element.classList.add("go");
   }
-
-
-  /* =========================================
-     実行
-  ========================================= */
 
   async function run(){
-
-    if(busy){
-      return;
-    }
-
-    busy =
-      true;
-
-    actionButton.disabled =
-      true;
-
-
+    if(busy) return;
+    busy = true;
+    actionButton.disabled = true;
     buildGrid();
-
-
-    outCapsule.classList.remove(
-      "show"
-    );
-
-    chute.classList.remove(
-      "active"
-    );
-
-    openLayer.className =
-      "open-layer";
-
-
-    await sleep(
-      100
-    );
-
-
+    outCapsule.classList.remove("show");
+    chute.classList.remove("active");
+    openLayer.className = "open-layer";
+    await sleep(100);
     await shuffle();
-
-
-    const isJackpot =
-      mode === "jackpot"
-      ||
-      (
-        mode === "random"
-        &&
-        Math.random() <
-        .08
-      );
-
-
-    const target =
-      await selectTarget(
-        isJackpot
-      );
-
-
-    await routeToExit(
-      target
-    );
-
-
-    if(isJackpot){
-
-      await jackpotEffect(
-        target
-      );
-    }
-
-
-    await sleep(
-      160
-    );
-
-
-    await sinkUnit(
-      target
-    );
-
-
-    await sleep(
-      180
-    );
-
-
-    await releaseCapsule(
-      isJackpot
-    );
-
-
-    await sleep(
-      180
-    );
-
-
-    await openCapsule(
-      isJackpot
-    );
-
-
-    if(isJackpot){
-
-      fireFlash(
-        goldFlash
-      );
-
-    }else{
-
-      fireFlash(
-        whiteFlash
-      );
-    }
-
-
-    await sleep(
-      isJackpot
-      ?
-      920
-      :
-      650
-    );
-
-
-    openLayer.className =
-      "open-layer";
-
-
-    busy =
-      false;
-
-    actionButton.disabled =
-      false;
+    const isJackpot = mode === "jackpot" || (mode === "random" && Math.random() < .08);
+    const target = await selectTarget(isJackpot);
+    await routeToExit(target);
+    if(isJackpot) await jackpotEffect(target);
+    await sleep(140);
+    await sinkUnit(target);
+    await sleep(160);
+    await releaseCapsule(isJackpot);
+    await sleep(140);
+    await openCapsule(isJackpot);
+    if(isJackpot){ fireFlash(goldFlash); } else { fireFlash(whiteFlash); }
+    await sleep(isJackpot ? 920 : 650);
+    openLayer.className = "open-layer";
+    busy = false;
+    actionButton.disabled = false;
   }
 
+  actionButton.addEventListener("pointerdown", () => {
+    if(busy) return;
+    buttonArea.classList.add("pressed");
+    if(navigator.vibrate){ navigator.vibrate(14); }
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(eventName => {
+    actionButton.addEventListener(eventName, () => { buttonArea.classList.remove("pressed"); });
+  });
+  actionButton.addEventListener("click", run);
 
-  /* =========================================
-     ボタン
-  ========================================= */
+  modePanel.addEventListener("click", event => {
+    const button = event.target.closest("button");
+    if(!button) return;
+    mode = button.dataset.mode;
+    modePanel.querySelectorAll("button").forEach(item => item.classList.remove("active"));
+    button.classList.add("active");
+  });
 
-  actionButton.addEventListener(
-    "pointerdown",
-    () => {
-
-      if(busy){
-        return;
-      }
-
-      buttonArea.classList.add(
-        "pressed"
-      );
-
-      if(
-        navigator.vibrate
-      ){
-
-        navigator.vibrate(
-          14
-        );
-      }
-    }
-  );
-
-
-  [
-    "pointerup",
-    "pointercancel",
-    "pointerleave"
-  ]
-
-  .forEach(
-    eventName => {
-
-      actionButton.addEventListener(
-        eventName,
-        () => {
-
-          buttonArea.classList.remove(
-            "pressed"
-          );
-        }
-      );
-    }
-  );
-
-
-  actionButton.addEventListener(
-    "click",
-    run
-  );
-
-
-  /* =========================================
-     テスト切替
-  ========================================= */
-
-  modePanel.addEventListener(
-    "click",
-    event => {
-
-      const button =
-        event.target.closest(
-          "button"
-        );
-
-      if(!button){
-        return;
-      }
-
-      mode =
-        button.dataset.mode;
-
-      modePanel
-        .querySelectorAll(
-          "button"
-        )
-        .forEach(
-          item => {
-
-            item.classList.remove(
-              "active"
-            );
-          }
-        );
-
-      button.classList.add(
-        "active"
-      );
-    }
-  );
-
-
-  window.addEventListener(
-    "resize",
-    () => {
-
-      if(!busy){
-
-        buildGrid();
-      }
-    }
-  );
-
-
+  window.addEventListener("resize", () => { if(!busy) buildGrid(); });
   buildGrid();
-
 })();
 </script>
-
 </body>
 </html>
