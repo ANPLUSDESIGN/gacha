@@ -168,7 +168,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 </div>
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
-<div class="version">V11 / 4×4密着配置・全画面フラッシュ</div>
+<div class="version">V12 / SOUND</div>
 <script>
 (() => {
   const grid = document.getElementById("grid");
@@ -189,6 +189,147 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   let goldUnit = null;
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+
+  /* ==============================
+     SOUND（外部音源不要）
+  ============================== */
+
+  let audioCtx = null;
+  let masterGain = null;
+
+  function initAudio(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+
+      audioCtx = new AC();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.20;
+      masterGain.connect(audioCtx.destination);
+    }
+
+    if(audioCtx.state === "suspended"){
+      audioCtx.resume();
+    }
+  }
+
+  function tone(freq=440,duration=.1,type="sine",volume=.12,delay=0,endFreq=null){
+    if(!audioCtx || !masterGain) return;
+
+    const t = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq,t);
+
+    if(endFreq){
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(20,endFreq),
+        t + duration
+      );
+    }
+
+    gain.gain.setValueAtTime(.0001,t);
+    gain.gain.exponentialRampToValueAtTime(volume,t+.012);
+    gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(t);
+    osc.stop(t+duration+.03);
+  }
+
+  function noise(duration=.1,volume=.08,delay=0){
+    if(!audioCtx || !masterGain) return;
+
+    const len = Math.max(1,Math.floor(audioCtx.sampleRate*duration));
+    const buffer = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for(let i=0;i<len;i++){
+      data[i] = Math.random()*2-1;
+    }
+
+    const src = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+    const t = audioCtx.currentTime + delay;
+
+    src.buffer = buffer;
+    filter.type = "bandpass";
+    filter.frequency.value = 1200;
+    filter.Q.value = .75;
+
+    gain.gain.setValueAtTime(volume,t);
+    gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+
+    src.start(t);
+  }
+
+  function soundButton(){
+    tone(130,.055,"square",.16);
+    tone(72,.085,"sine",.14,.01,50);
+  }
+
+  function soundCubeMove(){
+    tone(210,.13,"triangle",.075,0,315);
+    noise(.075,.032,.02);
+  }
+
+  function soundSelect(){
+    tone(720,.075,"sine",.09);
+    tone(980,.085,"sine",.055,.055);
+  }
+
+  function soundJackpot(){
+    tone(392,.16,"triangle",.12,0);
+    tone(523.25,.18,"triangle",.13,.12);
+    tone(659.25,.21,"triangle",.14,.25);
+    tone(783.99,.30,"sine",.12,.39);
+  }
+
+  function soundSink(){
+    tone(320,.32,"sawtooth",.055,0,72);
+    noise(.17,.035,.05);
+  }
+
+  function soundChute(){
+    tone(82,.10,"square",.14);
+    noise(.12,.09,.02);
+    tone(128,.16,"triangle",.08,.09,88);
+  }
+
+  function soundOpenCharge(isJackpot){
+    if(isJackpot){
+      tone(420,.42,"sine",.09,0,980);
+      tone(630,.42,"triangle",.06,.04,1420);
+    }else{
+      tone(330,.38,"sine",.07,0,820);
+      tone(560,.34,"triangle",.05,.04,1080);
+    }
+  }
+
+  function soundWhiteFlash(){
+    noise(.34,.15);
+    tone(1150,.22,"sine",.105,0,440);
+    tone(210,.26,"sine",.10,.015,95);
+  }
+
+  function soundGoldFlash(){
+    noise(.45,.17);
+    tone(523.25,.48,"triangle",.13,0);
+    tone(659.25,.48,"triangle",.12,.035);
+    tone(783.99,.54,"sine",.12,.07);
+    tone(1046.50,.62,"sine",.105,.12);
+  }
+
 
   function metrics(){
     const gapX = 0;
@@ -253,6 +394,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function moveGroup(slots){
+    soundCubeMove();
     const uniqueSlots = [...new Set(slots)];
     const group = uniqueSlots.map(slot => unitAt(slot));
     if(group.some(unit => !unit)) return;
@@ -298,6 +440,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     decoys.forEach(unit => unit.classList.add("selected"));
     await sleep(200);
     decoys.forEach(unit => unit.classList.remove("selected"));
+    soundSelect();
     target.classList.add("selected");
     await sleep(320);
     return target;
@@ -328,6 +471,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function jackpotEffect(target){
+    soundJackpot();
     units.forEach(unit => { if(unit !== target){ unit.classList.add("dim"); } });
     target.classList.remove("selected");
     target.classList.add("jackpot");
@@ -335,6 +479,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function sinkUnit(target){
+    soundSink();
     const slot = Number(target.dataset.slot);
     const p = slotPosition(slot);
     target.classList.remove("selected");
@@ -344,6 +489,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function releaseCapsule(isJackpot){
+    soundChute();
     outCapsule.src = isJackpot ? "capsule-gold.png" : "capsule.png";
     chute.classList.remove("active");
     outCapsule.classList.remove("show");
@@ -355,6 +501,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   async function openCapsule(isJackpot){
+    soundOpenCharge(isJackpot);
     const src = isJackpot ? "capsule-gold.png" : "capsule.png";
     openTop.src = src;
     openBottom.src = src;
@@ -390,7 +537,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await releaseCapsule(isJackpot);
     await sleep(140);
     await openCapsule(isJackpot);
-    if(isJackpot){ fireFlash(goldFlash); } else { fireFlash(whiteFlash); }
+    if(isJackpot){
+      soundGoldFlash();
+      fireFlash(goldFlash);
+    }else{
+      soundWhiteFlash();
+      fireFlash(whiteFlash);
+    }
     await sleep(isJackpot ? 1050 : 900);
     openLayer.className = "open-layer";
     busy = false;
@@ -399,8 +552,15 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 
   actionButton.addEventListener("pointerdown", () => {
     if(busy) return;
+
+    initAudio();
+    soundButton();
+
     buttonArea.classList.add("pressed");
-    if(navigator.vibrate){ navigator.vibrate(14); }
+
+    if(navigator.vibrate){
+      navigator.vibrate(14);
+    }
   });
   ["pointerup","pointercancel","pointerleave"].forEach(eventName => {
     actionButton.addEventListener(eventName, () => { buttonArea.classList.remove("pressed"); });
