@@ -66,7 +66,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 .unit-capsule{
   position:absolute;left:24%;top:24%;width:52%;height:52%;
   object-fit:contain;pointer-events:none;user-select:none;
-  filter:drop-shadow(0 8px 10px rgba(0,0,0,.18));
+  filter:var(--capsule-filter, none) drop-shadow(0 8px 10px rgba(0,0,0,.18));
 }
 .unit.sink{
   z-index:48;
@@ -184,6 +184,52 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const params = new URLSearchParams(location.search);
   const mode = params.get("mode") || "random";
   let goldUnit = null;
+
+  const NORMAL_VARIANTS = [
+    "blue",
+    "purple",
+    "pink",
+    "cyan"
+  ];
+
+  const CAPSULE_FILTERS = {
+    blue: "hue-rotate(0deg) saturate(1.0) brightness(1.0)",
+    purple: "hue-rotate(42deg) saturate(1.18) brightness(1.04)",
+    pink: "hue-rotate(92deg) saturate(1.28) brightness(1.06)",
+    cyan: "hue-rotate(-46deg) saturate(1.15) brightness(1.04)"
+  };
+
+  function pickNormalVariant(){
+    return NORMAL_VARIANTS[
+      Math.floor(
+        Math.random() *
+        NORMAL_VARIANTS.length
+      )
+    ];
+  }
+
+  function setCapsuleVisual(
+    img,
+    variant,
+    isGold = false
+  ){
+    if(!img) return;
+
+    if(isGold){
+      img.src = "capsule-gold.png";
+      img.style.filter = "drop-shadow(0 0 14px rgba(255,207,74,.48))";
+      return;
+    }
+
+    img.src = "capsule.png";
+
+    const f =
+      CAPSULE_FILTERS[variant] ||
+      CAPSULE_FILTERS.blue;
+
+    img.style.filter =
+      `${f} drop-shadow(0 8px 10px rgba(0,0,0,.18))`;
+  }
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -507,43 +553,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   }
 
   function startMachineHum(){
-    if(!audioCtx) return;
-    stopMachineHum();
-
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const filter = audioCtx.createBiquadFilter();
-    const gain = audioCtx.createGain();
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-
-    osc1.type = "sine";
-    osc2.type = "sawtooth";
-    osc1.frequency.value = 43;
-    osc2.frequency.value = 86;
-
-    filter.type = "lowpass";
-    filter.frequency.value = 230;
-
-    gain.gain.value = .012;
-
-    lfo.type = "sine";
-    lfo.frequency.value = 1.35;
-    lfoGain.gain.value = .006;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(gain.gain);
-
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
-
-    osc1.start();
-    osc2.start();
-    lfo.start();
-
-    machineNodes = [osc1,osc2,lfo,filter,gain];
+    // V20: continuous low background hum disabled.
   }
 
   function stopMachineHum(){
@@ -603,14 +613,29 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
       unit.className = isGold ? "unit gold-unit" : "unit";
       unit.dataset.id = i;
       unit.dataset.gold = isGold ? "1" : "0";
+      unit.dataset.variant = isGold ? "gold" : pickNormalVariant();
+
       unit.innerHTML = `
         <img class="unit-cube" src="cube.png" alt="">
         <img class="unit-capsule" src="${isGold ? "capsule-gold.png" : "capsule.png"}" alt="">
       `;
+
+      const capsuleImg =
+        unit.querySelector(".unit-capsule");
+
+      setCapsuleVisual(
+        capsuleImg,
+        unit.dataset.variant,
+        isGold
+      );
+
       grid.appendChild(unit);
       units.push(unit);
       placeUnit(unit, i, false);
-      if(isGold) goldUnit = unit;
+
+      if(isGold){
+        goldUnit = unit;
+      }
     }
   }
 
@@ -757,7 +782,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     actionButton.disabled = true;
 
     startMachineGlow();
-    startMachineHum();
 
     buildGrid();
     outCapsule.classList.remove("show");
@@ -781,9 +805,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(140);
     await sinkUnit(target);
     await sleep(160);
-    await releaseCapsule(isJackpot);
+    const targetVariant =
+      target.dataset.variant || "blue";
+
+    await releaseCapsule(
+      isJackpot,
+      targetVariant
+    );
     await sleep(140);
-    await openCapsule(isJackpot);
+    await openCapsule(
+      isJackpot,
+      targetVariant
+    );
     if(isJackpot){
       soundGoldFlash();
       fireFlash(goldFlash);
