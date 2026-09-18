@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pixel Cube Gacha</title>
+<title>Pixel Cube Gacha V15</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{
@@ -170,11 +170,20 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const machine = document.getElementById("machine");
   const scanLight = document.getElementById("scanLight");
 
-  const sfxButton = document.getElementById("sfxButton");
-  const sfxMachine = document.getElementById("sfxMachine");
-  const sfxRiser = document.getElementById("sfxRiser");
-  const sfxImpact = document.getElementById("sfxImpact");
-  const sfxJackpot = document.getElementById("sfxJackpot");
+  /* 音源はDOM順に依存させず、JS側で直接生成 */
+  const sfxButton = new Audio("button.mp3");
+  const sfxMachine = new Audio("machine.mp3");
+  const sfxRiser = new Audio("riser.mp3");
+  const sfxImpact = new Audio("impact.mp3");
+  const sfxJackpot = new Audio("jackpot.mp3");
+
+  [sfxButton,sfxMachine,sfxRiser,sfxImpact,sfxJackpot].forEach(audio => {
+    audio.preload = "auto";
+    audio.playsInline = true;
+    audio.load();
+  });
+
+  sfxMachine.loop = true;
   const buttonArea = document.getElementById("buttonArea");
   const actionButton = document.getElementById("actionButton");
   const chute = document.getElementById("chute");
@@ -409,7 +418,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     actionButton.disabled = true;
 
     startMachineGlow();
-    playSfx(sfxMachine,.82,true,1.0);
+    playSfx(sfxMachine,1.0,true,1.0);
 
     buildGrid();
     outCapsule.classList.remove("show");
@@ -428,7 +437,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     const target = await selectTarget(isJackpot);
     await routeToExit(target);
     if(isJackpot){
-      playSfx(sfxJackpot,.95,true,1.0);
+      playSfx(sfxJackpot,1.0,true,1.0);
       await jackpotEffect(target);
     }
     await sleep(140);
@@ -436,9 +445,9 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(160);
     await releaseCapsule(isJackpot);
     await sleep(140);
-    playSfx(sfxRiser,isJackpot ? .94 : .80,true,isJackpot ? 1.0 : 1.08);
+    playSfx(sfxRiser,isJackpot ? 1.0 : .95,true,isJackpot ? 1.0 : 1.05);
     await openCapsule(isJackpot);
-    playSfx(sfxImpact,isJackpot ? 1.0 : .90,true,isJackpot ? .92 : 1.0);
+    playSfx(sfxImpact,1.0,true,isJackpot ? .94 : 1.0);
 
     if(isJackpot){
       fireFlash(goldFlash);
@@ -476,11 +485,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 })();
 </script>
 
-<audio id="sfxButton" src="button.mp3" preload="auto"></audio>
-<audio id="sfxMachine" src="machine.mp3" preload="auto"></audio>
-<audio id="sfxRiser" src="riser.mp3" preload="auto"></audio>
-<audio id="sfxImpact" src="impact.mp3" preload="auto"></audio>
-<audio id="sfxJackpot" src="jackpot.mp3" preload="auto"></audio>
 
 </body>
 </html>
