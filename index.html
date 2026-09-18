@@ -3,55 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pixel Cube Gacha</title>
+<title>Pixel Cube Gacha FINAL</title>
 
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;background:radial-gradient(circle at 50% 18%,#102750 0,#06101f 28%,#02050b 68%);overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:radial-gradient(circle at 50% 18%,#102750 0,#06101f 28%,#02050b 68%);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 .stage{width:min(100vw,520px);height:100svh;display:flex;align-items:center;justify-content:center}
-.machine{position:relative;width:min(100%,calc(100svh * .5628));aspect-ratio:941/1672;filter:drop-shadow(0 24px 42px rgba(0,0,0,.55))}
-.machine-base{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+.machine{
+  position:relative;
+  width:min(100%,calc(100svh * .5628));
+  aspect-ratio:941/1672;
+  filter:drop-shadow(0 24px 42px rgba(0,0,0,.55));
+}
+.machine-base{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;pointer-events:none;user-select:none;
+}
 
-.grid{position:absolute;left:12.75%;top:7.75%;width:74.55%;height:48.10%;z-index:10;overflow:hidden}
-.unit{position:absolute;width:23.15%;height:23.15%;left:0;top:0;transform:translate3d(0,0,0);transition:transform .34s cubic-bezier(.18,.84,.24,1.05),filter .20s ease,opacity .20s ease;will-change:transform;transform-origin:center center}
-.unit.moving{z-index:30;filter:brightness(1.18) drop-shadow(0 0 11px rgba(71,201,255,.62))}
-.unit.selected{z-index:35;filter:brightness(1.30) drop-shadow(0 0 12px rgba(166,239,255,.95)) drop-shadow(0 0 24px rgba(41,170,255,.85))}
-.unit.dim{opacity:.27;filter:brightness(.52) saturate(.65)}
-.unit.gold{z-index:40;animation:goldPulse .52s ease-in-out infinite alternate}
-@keyframes goldPulse{from{filter:brightness(1.05) drop-shadow(0 0 8px rgba(255,210,74,.65))}to{filter:brightness(1.28) drop-shadow(0 0 16px rgba(255,236,153,.95)) drop-shadow(0 0 30px rgba(255,172,0,1))}}
-.unit-cube{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
-.unit-capsule{position:absolute;left:18%;top:18%;width:64%;height:64%;object-fit:contain;pointer-events:none;user-select:none}
-.unit.sink{z-index:45;transition:transform .58s cubic-bezier(.24,.72,.24,1),opacity .40s ease .12s,filter .25s ease;opacity:0;filter:brightness(1.6)}
+/* ===== 4×4 ===== */
+.grid{
+  position:absolute;
+  left:12.75%;
+  top:7.75%;
+  width:74.55%;
+  height:48.10%;
+  z-index:10;
+  overflow:hidden;
+}
+.unit{
+  position:absolute;left:0;top:0;
+  transition:
+    transform .42s cubic-bezier(.18,.82,.24,1.05),
+    filter .20s ease,
+    opacity .20s ease;
+  will-change:transform;
+  transform-origin:center;
+}
+.unit.moving{
+  z-index:30;
+  filter:brightness(1.20) drop-shadow(0 0 13px rgba(68,201,255,.68));
+}
+.unit.selected{
+  z-index:36;
+  filter:
+    brightness(1.32)
+    drop-shadow(0 0 13px rgba(180,244,255,.96))
+    drop-shadow(0 0 26px rgba(33,169,255,.88));
+}
+.unit.dim{
+  opacity:.28;
+  filter:brightness(.54) saturate(.62);
+}
+.unit.gold-unit{
+  filter:drop-shadow(0 0 12px rgba(255,205,70,.50));
+}
+.unit.jackpot{
+  z-index:42;
+  animation:goldPulse .48s ease-in-out infinite alternate;
+}
+@keyframes goldPulse{
+  from{
+    filter:brightness(1.06) drop-shadow(0 0 12px rgba(255,205,70,.55));
+  }
+  to{
+    filter:
+      brightness(1.30)
+      drop-shadow(0 0 20px rgba(255,236,150,.95))
+      drop-shadow(0 0 38px rgba(255,172,0,1));
+  }
+}
+.unit-cube{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;pointer-events:none;user-select:none;
+}
+.unit-capsule{
+  position:absolute;left:18%;top:18%;width:64%;height:64%;
+  object-fit:contain;pointer-events:none;user-select:none;
+}
+.unit.sink{
+  z-index:48;
+  transition:
+    transform .58s cubic-bezier(.24,.72,.24,1),
+    opacity .40s ease .12s,
+    filter .25s ease;
+  opacity:0;
+  filter:brightness(1.65);
+}
 
-.button-area{position:absolute;left:40.05%;top:54.15%;width:19.9%;aspect-ratio:1/1;z-index:55}
-.button-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+/* ===== ボタン ===== */
+.button-area{
+  position:absolute;left:40.05%;top:54.15%;
+  width:19.9%;aspect-ratio:1/1;z-index:55;
+}
+.button-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;pointer-events:none;
+}
 #buttonPressed{opacity:0}
-.action-button{position:absolute;inset:0;z-index:5;border:0;border-radius:50%;background:transparent;cursor:pointer}
+.action-button{
+  position:absolute;inset:0;z-index:5;border:0;
+  border-radius:50%;background:transparent;cursor:pointer;
+}
 .button-area.pressed #buttonNormal{opacity:0}
-.button-area.pressed #buttonPressed{opacity:1;transform:translateY(2px) scale(.97)}
+.button-area.pressed #buttonPressed{
+  opacity:1;
+  transform:translateY(2px) scale(.97);
+}
 
-.chute{position:absolute;left:35.25%;top:71.05%;width:29.5%;height:13.4%;z-index:60;overflow:hidden;pointer-events:none}
-.chute-glow{position:absolute;left:1%;top:0;width:98%;height:38%;object-fit:fill;opacity:0;pointer-events:none}
-.chute.active .chute-glow{animation:chuteGlow .85s ease}
-@keyframes chuteGlow{0%{opacity:0;transform:scale(.8)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
-.out-capsule{position:absolute;left:50%;top:-34%;width:46%;transform:translateX(-50%) rotate(-10deg) scale(.72);opacity:0;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.58))}
-.out-capsule.show{animation:outCapsule .95s cubic-bezier(.17,.84,.24,1.14) forwards}
-@keyframes outCapsule{0%{top:-34%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}18%{opacity:1}58%{top:50%;transform:translateX(-50%) rotate(8deg) scale(.92)}80%{top:68%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}100%{top:63%;opacity:1;transform:translateX(-50%) rotate(0) scale(.99)}}
+/* ===== 排出口 ===== */
+.chute{
+  position:absolute;
+  left:35.25%;top:71.05%;
+  width:29.5%;height:13.4%;
+  z-index:60;overflow:hidden;pointer-events:none;
+}
+.chute-glow{
+  position:absolute;left:1%;top:0;width:98%;height:38%;
+  object-fit:fill;opacity:0;
+}
+.chute.active .chute-glow{animation:chuteGlow .82s ease}
+@keyframes chuteGlow{
+  0%{opacity:0;transform:scale(.82)}
+  25%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.12)}
+}
+.out-capsule{
+  position:absolute;left:50%;top:-34%;
+  width:46%;
+  transform:translateX(-50%) rotate(-10deg) scale(.72);
+  opacity:0;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.58));
+}
+.out-capsule.show{
+  animation:outCapsule .96s cubic-bezier(.17,.84,.24,1.14) forwards;
+}
+@keyframes outCapsule{
+  0%{top:-34%;opacity:0;transform:translateX(-50%) rotate(-12deg) scale(.70)}
+  18%{opacity:1}
+  58%{top:50%;transform:translateX(-50%) rotate(8deg) scale(.92)}
+  80%{top:68%;transform:translateX(-50%) rotate(-3deg) scale(1.03)}
+  100%{top:63%;opacity:1;transform:translateX(-50%) rotate(0) scale(.99)}
+}
 
-.flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:100}
+/* ===== カプセルOPEN ===== */
+.open-layer{
+  position:fixed;inset:0;
+  z-index:85;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(1,4,12,.72);
+  backdrop-filter:blur(5px);
+  opacity:0;pointer-events:none;
+}
+.open-layer.show{
+  opacity:1;
+}
+.open-stage{
+  position:relative;
+  width:min(58vw,280px);
+  aspect-ratio:1/1;
+}
+.open-half{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 0 20px rgba(70,190,255,.55));
+}
+.open-half.top{
+  clip-path:inset(0 0 50% 0);
+}
+.open-half.bottom{
+  clip-path:inset(50% 0 0 0);
+}
+.open-layer.opening .open-half.top{
+  animation:openTop .68s cubic-bezier(.18,.84,.25,1) forwards;
+}
+.open-layer.opening .open-half.bottom{
+  animation:openBottom .68s cubic-bezier(.18,.84,.25,1) forwards;
+}
+@keyframes openTop{
+  to{transform:translateY(-42%) rotate(-13deg) scale(1.02)}
+}
+@keyframes openBottom{
+  to{transform:translateY(42%) rotate(13deg) scale(1.02)}
+}
+.open-core{
+  position:absolute;left:50%;top:50%;
+  width:18%;aspect-ratio:1/1;
+  transform:translate(-50%,-50%) scale(.2);
+  border-radius:50%;
+  opacity:0;
+  background:#d8f7ff;
+  box-shadow:
+    0 0 28px #70ddff,
+    0 0 70px rgba(65,142,255,.9);
+}
+.open-layer.opening .open-core{
+  animation:core .45s .30s ease-out forwards;
+}
+.open-layer.gold .open-core{
+  background:#fff3aa;
+  box-shadow:
+    0 0 32px #fff0a5,
+    0 0 85px rgba(255,174,0,.95);
+}
+@keyframes core{
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* ===== 最終フラッシュ ===== */
+.flash{
+  position:fixed;inset:0;
+  opacity:0;pointer-events:none;
+  z-index:100;
+}
 #whiteFlash{background:#fff}
-#goldFlash{background:radial-gradient(circle at 50% 45%,#fff 0 2%,#fff5b2 8%,rgba(255,189,0,.62) 25%,transparent 58%)}
-#whiteFlash.go{animation:whiteFlash .44s ease-out}
-#goldFlash.go{animation:goldFlash .86s ease-out}
-@keyframes whiteFlash{0%{opacity:0}20%{opacity:.84}100%{opacity:0}}
-@keyframes goldFlash{0%{opacity:0;transform:scale(.55)}28%{opacity:1}100%{opacity:0;transform:scale(1.42)}}
+#goldFlash{
+  background:
+    radial-gradient(
+      circle at 50% 48%,
+      #fff 0 3%,
+      #fff5b2 10%,
+      rgba(255,190,0,.76) 30%,
+      rgba(255,149,0,.18) 56%,
+      transparent 72%
+    );
+}
+#whiteFlash.go{animation:whiteFlash .62s ease-out}
+#goldFlash.go{animation:goldFlash .90s ease-out}
+@keyframes whiteFlash{
+  0%{opacity:0}
+  25%{opacity:1}
+  55%{opacity:.65}
+  100%{opacity:0}
+}
+@keyframes goldFlash{
+  0%{opacity:0;transform:scale(.55)}
+  28%{opacity:1}
+  58%{opacity:.78}
+  100%{opacity:0;transform:scale(1.45)}
+}
 
-.mode-panel{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px;z-index:120;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px)}
-.mode-panel button{border:0;border-radius:999px;padding:8px 14px;background:#172033;color:#fff;font-size:12px;font-weight:800}
+/* ===== テスト用 ===== */
+.mode-panel{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top));
+  left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;padding:6px;
+  z-index:120;border-radius:999px;
+  background:rgba(0,0,0,.66);
+  border:1px solid rgba(255,255,255,.13);
+  backdrop-filter:blur(8px);
+}
+.mode-panel button{
+  border:0;border-radius:999px;padding:8px 14px;
+  background:#172033;color:#fff;font-size:12px;font-weight:800;
+}
 .mode-panel button.active{background:#087cff}
-
-.version{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:120;color:#84dcff;background:rgba(0,0,0,.5);border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap}
+.version{
+  position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+  z-index:120;color:#84dcff;background:rgba(0,0,0,.5);
+  border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap;
+}
 </style>
 </head>
 
@@ -84,10 +302,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   </div>
 </div>
 
+<div class="open-layer" id="openLayer">
+  <div class="open-stage">
+    <img id="openTop" class="open-half top" src="capsule.png" alt="">
+    <img id="openBottom" class="open-half bottom" src="capsule.png" alt="">
+    <div class="open-core"></div>
+  </div>
+</div>
+
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
 
-<div class="version">FINAL TEST / キューブ本体移動</div>
+<div class="version">V8 / 2〜3キューブ同時移動・OPEN演出</div>
 
 <script>
 (() => {
@@ -97,6 +323,9 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   const actionButton = document.getElementById("actionButton");
   const chute = document.getElementById("chute");
   const outCapsule = document.getElementById("outCapsule");
+  const openLayer = document.getElementById("openLayer");
+  const openTop = document.getElementById("openTop");
+  const openBottom = document.getElementById("openBottom");
   const whiteFlash = document.getElementById("whiteFlash");
   const goldFlash = document.getElementById("goldFlash");
   const modePanel = document.getElementById("modePanel");
@@ -104,229 +333,846 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   let units = [];
   let busy = false;
   let mode = "random";
+  let goldUnit = null;
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
-  function metrics(){
-    const gapX = grid.clientWidth * .022;
-    const gapY = grid.clientHeight * .022;
-    const width = (grid.clientWidth - gapX * 3) / 4;
-    const height = (grid.clientHeight - gapY * 3) / 4;
-    return {gapX,gapY,width,height};
-  }
 
-  function slotPosition(slot){
-    const m = metrics();
+  /* =========================================
+     座標
+  ========================================= */
+
+  function metrics(){
+
+    const gapX =
+      grid.clientWidth * .022;
+
+    const gapY =
+      grid.clientHeight * .022;
+
+    const width =
+      (
+        grid.clientWidth -
+        gapX * 3
+      ) / 4;
+
+    const height =
+      (
+        grid.clientHeight -
+        gapY * 3
+      ) / 4;
 
     return {
-      x:(slot % 4) * (m.width + m.gapX),
-      y:Math.floor(slot / 4) * (m.height + m.gapY),
-      width:m.width,
-      height:m.height
+      gapX,
+      gapY,
+      width,
+      height
     };
   }
 
-  function placeUnit(unit,slot,animate=true){
-    const p = slotPosition(slot);
+
+  function slotPosition(slot){
+
+    const m =
+      metrics();
+
+    return {
+
+      x:
+        (slot % 4) *
+        (m.width + m.gapX),
+
+      y:
+        Math.floor(slot / 4) *
+        (m.height + m.gapY),
+
+      width:
+        m.width,
+
+      height:
+        m.height
+
+    };
+  }
+
+
+  function placeUnit(
+    unit,
+    slot,
+    animate = true
+  ){
+
+    const p =
+      slotPosition(slot);
 
     if(!animate){
-      unit.style.transition = "none";
+      unit.style.transition =
+        "none";
     }
 
-    unit.style.width = p.width + "px";
-    unit.style.height = p.height + "px";
+    unit.style.width =
+      p.width + "px";
+
+    unit.style.height =
+      p.height + "px";
 
     unit.style.transform =
-      `translate3d(${p.x}px,${p.y}px,0)`;
+      `translate3d(
+        ${p.x}px,
+        ${p.y}px,
+        0
+      )`;
 
-    unit.dataset.slot = slot;
+    unit.dataset.slot =
+      slot;
 
     if(!animate){
+
       unit.offsetHeight;
-      unit.style.transition = "";
+
+      unit.style.transition =
+        "";
     }
   }
+
+
+  /* =========================================
+     16キューブ生成
+     通常時もゴールドを1個入れる
+  ========================================= */
 
   function buildGrid(){
-    grid.innerHTML = "";
-    units = [];
 
-    for(let i=0;i<16;i++){
+    grid.innerHTML =
+      "";
 
-      const unit = document.createElement("div");
+    units =
+      [];
 
-      unit.className = "unit";
-      unit.dataset.id = i;
+    const goldIndex =
+      Math.floor(
+        Math.random() * 16
+      );
+
+    for(
+      let i = 0;
+      i < 16;
+      i++
+    ){
+
+      const isGold =
+        i === goldIndex;
+
+      const unit =
+        document.createElement(
+          "div"
+        );
+
+      unit.className =
+        isGold
+        ?
+        "unit gold-unit"
+        :
+        "unit";
+
+      unit.dataset.id =
+        i;
+
+      unit.dataset.gold =
+        isGold
+        ?
+        "1"
+        :
+        "0";
 
       unit.innerHTML = `
-        <img class="unit-cube" src="cube.png" alt="">
-        <img class="unit-capsule" src="capsule.png" alt="">
+
+        <img
+          class="unit-cube"
+          src="cube.png"
+          alt=""
+        >
+
+        <img
+          class="unit-capsule"
+          src="${
+            isGold
+            ?
+            "capsule-gold.png"
+            :
+            "capsule.png"
+          }"
+          alt=""
+        >
+
       `;
 
-      grid.appendChild(unit);
-      units.push(unit);
+      grid.appendChild(
+        unit
+      );
 
-      placeUnit(unit,i,false);
+      units.push(
+        unit
+      );
+
+      placeUnit(
+        unit,
+        i,
+        false
+      );
+
+      if(isGold){
+
+        goldUnit =
+          unit;
+      }
     }
   }
 
+
   function unitAt(slot){
-    return units.find(unit => Number(unit.dataset.slot) === slot);
+
+    return units.find(
+
+      unit =>
+
+      Number(
+        unit.dataset.slot
+      ) === slot
+
+    );
   }
 
-  function neighbours(slot){
-    const row = Math.floor(slot / 4);
-    const column = slot % 4;
-    const result = [];
 
-    if(row > 0) result.push(slot - 4);
-    if(row < 3) result.push(slot + 4);
-    if(column > 0) result.push(slot - 1);
-    if(column < 3) result.push(slot + 1);
+  function neighbours(slot){
+
+    const row =
+      Math.floor(
+        slot / 4
+      );
+
+    const column =
+      slot % 4;
+
+    const result =
+      [];
+
+    if(row > 0){
+
+      result.push(
+        slot - 4
+      );
+    }
+
+    if(row < 3){
+
+      result.push(
+        slot + 4
+      );
+    }
+
+    if(column > 0){
+
+      result.push(
+        slot - 1
+      );
+    }
+
+    if(column < 3){
+
+      result.push(
+        slot + 1
+      );
+    }
 
     return result;
   }
 
-  async function swap(slotA,slotB){
 
-    const a = unitAt(slotA);
-    const b = unitAt(slotB);
+  /* =========================================
+     2〜3キューブ同時移動
+  ========================================= */
 
-    if(!a || !b) return;
+  async function moveGroup(
+    slots
+  ){
 
-    a.classList.add("moving");
-    b.classList.add("moving");
+    const group =
+      slots.map(
+        slot =>
+        unitAt(slot)
+      );
 
-    placeUnit(a,slotB,true);
-    placeUnit(b,slotA,true);
+    if(
+      group.some(
+        unit =>
+        !unit
+      )
+    ){
+      return;
+    }
 
-    await sleep(360);
 
-    a.classList.remove("moving");
-    b.classList.remove("moving");
+    group.forEach(
+      unit =>
+      unit.classList.add(
+        "moving"
+      )
+    );
+
+
+    const destinations =
+      slots.slice(1);
+
+    destinations.push(
+      slots[0]
+    );
+
+
+    group.forEach(
+      (unit,index) => {
+
+        placeUnit(
+          unit,
+          destinations[index],
+          true
+        );
+      }
+    );
+
+
+    await sleep(
+      440
+    );
+
+
+    group.forEach(
+      unit =>
+      unit.classList.remove(
+        "moving"
+      )
+    );
   }
 
-  async function shuffle(){
 
-    let current = Math.floor(Math.random() * 16);
+  function makeConnectedGroup(){
 
-    for(let i=0;i<12;i++){
+    const count =
+      Math.random() < .52
+      ?
+      2
+      :
+      3;
 
-      const near = neighbours(current);
+    const first =
+      Math.floor(
+        Math.random() * 16
+      );
+
+    const slots =
+      [first];
+
+    let current =
+      first;
+
+    while(
+      slots.length <
+      count
+    ){
+
+      const candidates =
+        neighbours(current)
+        .filter(
+          slot =>
+          !slots.includes(slot)
+        );
+
+      if(
+        candidates.length === 0
+      ){
+
+        break;
+      }
 
       const next =
-        near[
+        candidates[
           Math.floor(
             Math.random() *
-            near.length
+            candidates.length
           )
         ];
 
-      await swap(current,next);
+      slots.push(
+        next
+      );
 
-      current = next;
+      current =
+        next;
+    }
+
+    return slots;
+  }
+
+
+  async function shuffle(){
+
+    for(
+      let i = 0;
+      i < 9;
+      i++
+    ){
+
+      const group =
+        makeConnectedGroup();
+
+      await moveGroup(
+        group
+      );
+
+      await sleep(
+        45
+      );
     }
   }
 
-  async function selectTarget(){
 
-    const target =
-      units[
-        Math.floor(
-          Math.random() *
-          units.length
-        )
-      ];
+  /* =========================================
+     当選選択
+  ========================================= */
+
+  async function selectTarget(
+    isJackpot
+  ){
+
+    let target;
+
+    if(isJackpot){
+
+      target =
+        goldUnit;
+
+    }else{
+
+      const normalUnits =
+        units.filter(
+          unit =>
+          unit.dataset.gold !== "1"
+        );
+
+      target =
+        normalUnits[
+          Math.floor(
+            Math.random() *
+            normalUnits.length
+          )
+        ];
+    }
+
 
     const decoys =
       [...units]
-      .filter(unit => unit !== target)
-      .sort(() => Math.random() - .5)
-      .slice(0,2);
 
-    for(const unit of decoys){
+      .filter(
+        unit =>
+        unit !== target
+      )
 
-      unit.classList.add("selected");
+      .sort(
+        () =>
+        Math.random() -
+        .5
+      )
 
-      await sleep(190);
+      .slice(
+        0,
+        2
+      );
 
-      unit.classList.remove("selected");
 
-      await sleep(70);
-    }
+    decoys.forEach(
+      unit =>
+      unit.classList.add(
+        "selected"
+      )
+    );
 
-    target.classList.add("selected");
+    await sleep(
+      230
+    );
 
-    await sleep(350);
+
+    decoys.forEach(
+      unit =>
+      unit.classList.remove(
+        "selected"
+      )
+    );
+
+
+    target.classList.add(
+      "selected"
+    );
+
+
+    await sleep(
+      360
+    );
+
 
     return target;
   }
 
-  async function routeToExit(target){
+
+  /* =========================================
+     ターゲットを排出口側へ
+     ターゲット＋周囲1〜2個を一緒に動かす
+  ========================================= */
+
+  async function routeToExit(
+    target
+  ){
 
     let slot =
       Number(
         target.dataset.slot
       );
 
+
     while(
-      Math.floor(
-        slot / 4
-      ) < 3
+      Math.floor(slot / 4) <
+      3
     ){
 
       const next =
         slot + 4;
 
-      await swap(
-        slot,
-        next
-      );
+      const extraCandidates =
+        neighbours(next)
+        .filter(
+          s =>
+          s !== slot
+        );
+
+      if(
+        extraCandidates.length
+      ){
+
+        const extra =
+          extraCandidates[
+            Math.floor(
+              Math.random() *
+              extraCandidates.length
+            )
+          ];
+
+        await moveGroup(
+          [
+            slot,
+            next,
+            extra
+          ]
+        );
+
+      }else{
+
+        await moveGroup(
+          [
+            slot,
+            next
+          ]
+        );
+      }
 
       slot =
-        next;
+        Number(
+          target.dataset.slot
+        );
     }
 
+
     while(
-      (slot % 4) > 1
+      (slot % 4) >
+      1
     ){
 
       const next =
         slot - 1;
 
-      await swap(
-        slot,
-        next
-      );
+      const extraCandidates =
+        neighbours(next)
+        .filter(
+          s =>
+          s !== slot
+        );
+
+      if(
+        extraCandidates.length
+      ){
+
+        await moveGroup(
+          [
+            slot,
+            next,
+            extraCandidates[0]
+          ]
+        );
+
+      }else{
+
+        await moveGroup(
+          [
+            slot,
+            next
+          ]
+        );
+      }
 
       slot =
-        next;
+        Number(
+          target.dataset.slot
+        );
     }
 
+
     while(
-      (slot % 4) < 1
+      (slot % 4) <
+      1
     ){
 
       const next =
         slot + 1;
 
-      await swap(
-        slot,
-        next
-      );
+      const extraCandidates =
+        neighbours(next)
+        .filter(
+          s =>
+          s !== slot
+        );
+
+      if(
+        extraCandidates.length
+      ){
+
+        await moveGroup(
+          [
+            slot,
+            next,
+            extraCandidates[0]
+          ]
+        );
+
+      }else{
+
+        await moveGroup(
+          [
+            slot,
+            next
+          ]
+        );
+      }
 
       slot =
-        next;
+        Number(
+          target.dataset.slot
+        );
     }
+
 
     target.classList.add(
       "selected"
     );
 
-    await sleep(260);
+    await sleep(
+      260
+    );
   }
 
-  function fireFlash(element){
+
+  /* =========================================
+     確定演出
+  ========================================= */
+
+  async function jackpotEffect(
+    target
+  ){
+
+    units.forEach(
+      unit => {
+
+        if(
+          unit !== target
+        ){
+
+          unit.classList.add(
+            "dim"
+          );
+        }
+      }
+    );
+
+
+    target.classList.remove(
+      "selected"
+    );
+
+    target.classList.add(
+      "jackpot"
+    );
+
+
+    await sleep(
+      520
+    );
+  }
+
+
+  /* =========================================
+     キューブ本体収納
+  ========================================= */
+
+  async function sinkUnit(
+    target
+  ){
+
+    const slot =
+      Number(
+        target.dataset.slot
+      );
+
+    const p =
+      slotPosition(slot);
+
+
+    target.classList.remove(
+      "selected"
+    );
+
+
+    target.classList.add(
+      "sink"
+    );
+
+
+    target.style.transform =
+      `translate3d(
+        ${p.x}px,
+        ${p.y + p.height * .95}px,
+        0
+      )
+      scale(.58)`;
+
+
+    await sleep(
+      600
+    );
+  }
+
+
+  /* =========================================
+     排出口
+  ========================================= */
+
+  async function releaseCapsule(
+    isJackpot
+  ){
+
+    outCapsule.src =
+      isJackpot
+      ?
+      "capsule-gold.png"
+      :
+      "capsule.png";
+
+
+    chute.classList.remove(
+      "active"
+    );
+
+
+    outCapsule.classList.remove(
+      "show"
+    );
+
+
+    void outCapsule.offsetWidth;
+
+
+    chute.classList.add(
+      "active"
+    );
+
+
+    outCapsule.classList.add(
+      "show"
+    );
+
+
+    if(
+      navigator.vibrate
+    ){
+
+      navigator.vibrate(
+        [18,35,22]
+      );
+    }
+
+
+    await sleep(
+      980
+    );
+  }
+
+
+  /* =========================================
+     カプセルOPEN
+  ========================================= */
+
+  async function openCapsule(
+    isJackpot
+  ){
+
+    const src =
+      isJackpot
+      ?
+      "capsule-gold.png"
+      :
+      "capsule.png";
+
+
+    openTop.src =
+      src;
+
+    openBottom.src =
+      src;
+
+
+    openLayer.className =
+      isJackpot
+      ?
+      "open-layer show gold"
+      :
+      "open-layer show";
+
+
+    await sleep(
+      120
+    );
+
+
+    openLayer.classList.add(
+      "opening"
+    );
+
+
+    await sleep(
+      780
+    );
+  }
+
+
+  function fireFlash(
+    element
+  ){
 
     element.classList.remove(
       "go"
@@ -339,107 +1185,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     );
   }
 
-  async function jackpot(target){
 
-    units.forEach(unit => {
-
-      if(unit !== target){
-
-        unit.classList.add(
-          "dim"
-        );
-      }
-    });
-
-    target.classList.add(
-      "gold"
-    );
-
-    target
-      .querySelector(
-        ".unit-capsule"
-      )
-      .src =
-      "capsule-gold.png";
-
-    fireFlash(
-      goldFlash
-    );
-
-    await sleep(
-      700
-    );
-  }
-
-  async function sinkUnit(target){
-
-    const slot =
-      Number(
-        target.dataset.slot
-      );
-
-    const p =
-      slotPosition(slot);
-
-    target.classList.remove(
-      "selected"
-    );
-
-    target.classList.add(
-      "sink"
-    );
-
-    target.style.transform =
-      `translate3d(
-        ${p.x}px,
-        ${p.y + p.height * .95}px,
-        0
-      )
-      scale(.58)`;
-
-    await sleep(
-      600
-    );
-  }
-
-  async function releaseCapsule(gold){
-
-    outCapsule.src =
-      gold
-      ?
-      "capsule-gold.png"
-      :
-      "capsule.png";
-
-    chute.classList.remove(
-      "active"
-    );
-
-    outCapsule.classList.remove(
-      "show"
-    );
-
-    void outCapsule.offsetWidth;
-
-    chute.classList.add(
-      "active"
-    );
-
-    outCapsule.classList.add(
-      "show"
-    );
-
-    if(navigator.vibrate){
-
-      navigator.vibrate(
-        [18,35,22]
-      );
-    }
-
-    await sleep(
-      1000
-    );
-  }
+  /* =========================================
+     実行
+  ========================================= */
 
   async function run(){
 
@@ -447,12 +1196,15 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
       return;
     }
 
-    busy = true;
+    busy =
+      true;
 
     actionButton.disabled =
       true;
 
+
     buildGrid();
+
 
     outCapsule.classList.remove(
       "show"
@@ -462,58 +1214,116 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
       "active"
     );
 
-    await sleep(100);
+    openLayer.className =
+      "open-layer";
+
+
+    await sleep(
+      100
+    );
+
 
     await shuffle();
 
-    const target =
-      await selectTarget();
 
-    const isGold =
+    const isJackpot =
       mode === "jackpot"
       ||
       (
         mode === "random"
         &&
-        Math.random() < .08
+        Math.random() <
+        .08
       );
+
+
+    const target =
+      await selectTarget(
+        isJackpot
+      );
+
 
     await routeToExit(
       target
     );
 
-    if(isGold){
 
-      await jackpot(
+    if(isJackpot){
+
+      await jackpotEffect(
         target
       );
     }
 
-    await sleep(180);
+
+    await sleep(
+      160
+    );
+
 
     await sinkUnit(
       target
     );
 
-    await sleep(180);
+
+    await sleep(
+      180
+    );
+
 
     await releaseCapsule(
-      isGold
+      isJackpot
     );
 
-    fireFlash(
-      isGold
+
+    await sleep(
+      180
+    );
+
+
+    await openCapsule(
+      isJackpot
+    );
+
+
+    if(isJackpot){
+
+      fireFlash(
+        goldFlash
+      );
+
+    }else{
+
+      fireFlash(
+        whiteFlash
+      );
+    }
+
+
+    await sleep(
+      isJackpot
       ?
-      goldFlash
+      920
       :
-      whiteFlash
+      650
     );
 
-    busy = false;
+
+    openLayer.className =
+      "open-layer";
+
+
+    busy =
+      false;
 
     actionButton.disabled =
       false;
   }
+
+
+  /* =========================================
+     ボタン
+  ========================================= */
 
   actionButton.addEventListener(
     "pointerdown",
@@ -527,7 +1337,9 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
         "pressed"
       );
 
-      if(navigator.vibrate){
+      if(
+        navigator.vibrate
+      ){
 
         navigator.vibrate(
           14
@@ -536,28 +1348,38 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     }
   );
 
+
   [
     "pointerup",
     "pointercancel",
     "pointerleave"
   ]
-  .forEach(eventName => {
 
-    actionButton.addEventListener(
-      eventName,
-      () => {
+  .forEach(
+    eventName => {
 
-        buttonArea.classList.remove(
-          "pressed"
-        );
-      }
-    );
-  });
+      actionButton.addEventListener(
+        eventName,
+        () => {
+
+          buttonArea.classList.remove(
+            "pressed"
+          );
+        }
+      );
+    }
+  );
+
 
   actionButton.addEventListener(
     "click",
     run
   );
+
+
+  /* =========================================
+     テスト切替
+  ========================================= */
 
   modePanel.addEventListener(
     "click",
@@ -576,21 +1398,24 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
         button.dataset.mode;
 
       modePanel
-      .querySelectorAll(
-        "button"
-      )
-      .forEach(item => {
+        .querySelectorAll(
+          "button"
+        )
+        .forEach(
+          item => {
 
-        item.classList.remove(
-          "active"
+            item.classList.remove(
+              "active"
+            );
+          }
         );
-      });
 
       button.classList.add(
         "active"
       );
     }
   );
+
 
   window.addEventListener(
     "resize",
@@ -602,6 +1427,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
       }
     }
   );
+
 
   buildGrid();
 
