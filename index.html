@@ -132,9 +132,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 @keyframes goldFlash{0%{opacity:0}18%{opacity:1}64%{opacity:1}100%{opacity:0}}
 
 /* ===== テストUI ===== */
-.mode-panel{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px;z-index:120;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px)}
-.mode-panel button{border:0;border-radius:999px;padding:8px 14px;background:#172033;color:#fff;font-size:12px;font-weight:800}
-.mode-panel button.active{background:#087cff}
 .version{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:120;color:#84dcff;background:rgba(0,0,0,.5);border-radius:999px;padding:4px 9px;font-size:10px;white-space:nowrap}
 </style>
 </head>
@@ -165,6 +162,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
 <div class="flash" id="whiteFlash"></div>
 <div class="flash" id="goldFlash"></div>
 <script>
+/*
+  Pixel Cube Gacha - BASE TEMPLATE
+  --------------------------------
+  演出専用HTML。
+  当選確率・景品在庫・当選ログは持たせない。
+  それらは案件ごとのGoogleスプレッドシート＋GASで管理する想定。
+*/
 (() => {
   const grid = document.getElementById("grid");
   const machine = document.getElementById("machine");
@@ -182,8 +186,35 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   let units = [];
   let busy = false;
   const params = new URLSearchParams(location.search);
-  const mode = params.get("mode") || "random";
   let goldUnit = null;
+
+  /* =====================================================
+     原型版：当選確率・在庫判定はHTMLに持たせない
+
+     本番では、この関数だけGAS/API接続に置き換える。
+     GAS側で抽選・在庫減算・ログ保存を行い、
+     HTMLには結果だけ返す。
+
+     想定レスポンス例:
+       { result: "normal" }
+       { result: "jackpot" }
+
+     動作確認だけしたい場合:
+       ?result=normal
+       ?result=jackpot
+
+     ※ここに確率計算は一切入っていない。
+  ===================================================== */
+  async function requestDrawResult(){
+    // テスト表示用。確率抽選ではなく、指定された結果をそのまま使う。
+    const preview = params.get("result");
+    if(preview === "jackpot") return { result: "jackpot" };
+    if(preview === "normal") return { result: "normal" };
+
+    // 将来GAS接続時は、ここを fetch(...) に置き換える。
+    // 未接続の原型版では通常演出を返すだけ。
+    return { result: "normal" };
+  }
 
   const NORMAL_VARIANTS = [
     "blue",
@@ -747,9 +778,9 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(680);
   }
 
-  async function releaseCapsule(isJackpot){
+  async function releaseCapsule(isJackpot, variant = "blue"){
     soundChute();
-    outCapsule.src = isJackpot ? "capsule-gold.png" : "capsule.png";
+    setCapsuleVisual(outCapsule, variant, isJackpot);
     chute.classList.remove("active");
     outCapsule.classList.remove("show");
     void outCapsule.offsetWidth;
@@ -759,11 +790,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     await sleep(1040);
   }
 
-  async function openCapsule(isJackpot){
+  async function openCapsule(isJackpot, variant = "blue"){
     soundOpenCharge(isJackpot);
-    const src = isJackpot ? "capsule-gold.png" : "capsule.png";
-    openTop.src = src;
-    openBottom.src = src;
+    setCapsuleVisual(openTop, variant, isJackpot);
+    setCapsuleVisual(openBottom, variant, isJackpot);
     openLayer.className = isJackpot ? "open-layer show gold" : "open-layer show";
     await sleep(110);
     openLayer.classList.add("opening");
@@ -788,15 +818,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
     chute.classList.remove("active");
     openLayer.className = "open-layer";
     await sleep(100);
+
+    // 抽選結果は外部（将来のGAS）から受け取る。
+    // HTML内では確率計算しない。
+    const drawResult = await requestDrawResult();
+    const isJackpot = drawResult.result === "jackpot";
+
     await shuffle();
-    const isJackpot =
-      mode === "jackpot"
-      ||
-      (
-        mode !== "normal"
-        &&
-        Math.random() < .08
-      );
     const target = await selectTarget(isJackpot);
     await routeToExit(target);
     if(isJackpot){
@@ -852,6 +880,20 @@ body{display:flex;align-items:center;justify-content:center;min-height:100svh}
   actionButton.addEventListener("click", run);
 
   window.addEventListener("resize", () => { if(!busy) buildGrid(); });
+  // 外部実装用フック：将来、別ページやGAS連携から結果を渡して演出を開始できる。
+  // 例: window.playGachaResult("jackpot")
+  window.playGachaResult = async function(result){
+    if(busy) return;
+    const value = result === "jackpot" ? "jackpot" : "normal";
+    const original = requestDrawResult;
+    requestDrawResult = async () => ({ result: value });
+    try{
+      await run();
+    }finally{
+      requestDrawResult = original;
+    }
+  };
+
   buildGrid();
 })();
 </script>
